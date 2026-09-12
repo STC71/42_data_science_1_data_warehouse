@@ -139,16 +139,16 @@ Datos del subject / Module 0:
 4. Guardar
 
 <p align="center">
-  <img src="../../data_science_0_creation_db/ex01/imgs/img_pgAdmin_02.png" alt="Piscine Data Science – Module 0" width="100%">
+  <img src="./imgs/img_pgAdmin_02.png" alt="Piscine Data Science – Module 0" width="100%">
 </p>
 <p align="center">
-  <img src="../../data_science_0_creation_db/ex01/imgs/img_pgAdmin_03.png" alt="Piscine Data Science – Module 0" width="100%">
+  <img src="./imgs/img_pgAdmin_03.png" alt="Piscine Data Science – Module 0" width="100%">
 </p>
 <p align="center">
-  <img src="../../data_science_0_creation_db/ex01/imgs/img_pgAdmin_04.png" alt="Piscine Data Science – Module 0" width="100%">
+  <img src="./imgs/img_pgAdmin_04.png" alt="Piscine Data Science – Module 0" width="100%">
 </p>
 <p align="center">
-  <img src="../../data_science_0_creation_db/ex01/imgs/img_pgAdmin_05.png" alt="Piscine Data Science – Module 0" width="100%">
+  <img src="./imgs/img_pgAdmin_05.png" alt="Piscine Data Science – Module 0" width="100%">
 </p>
 
 ### Explorar
