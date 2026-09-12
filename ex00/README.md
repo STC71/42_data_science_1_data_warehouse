@@ -1,11 +1,7 @@
 # 🖥️ Ejercicio 00 – Show me your DB
 
 <p align="center">
-  <em>Piscine Data Science – Module 1 – Data Warehouse</em>
-</p>
-
-<p align="center">
-  <img src="imgs/banner_0.jpg" alt="Piscine Data Science – Module 0" width="100%">
+  <img src="../imgs/banner_09.jpg" alt="Piscine Data Science – Module 0" width="100%">
 </p>
 
 [← Volver al README principal](../README.md)
@@ -142,17 +138,34 @@ Datos del subject / Module 0:
 3. **Connection** → host, puerto, BD, usuario y contraseña de la tabla
 4. Guardar
 
+<p align="center">
+  <img src="../../data_science_0_creation_db/ex01/imgs/img_pgAdmin_02.png" alt="Piscine Data Science – Module 0" width="100%">
+</p>
+<p align="center">
+  <img src="../../data_science_0_creation_db/ex01/imgs/img_pgAdmin_03.png" alt="Piscine Data Science – Module 0" width="100%">
+</p>
+<p align="center">
+  <img src="../../data_science_0_creation_db/ex01/imgs/img_pgAdmin_04.png" alt="Piscine Data Science – Module 0" width="100%">
+</p>
+<p align="center">
+  <img src="../../data_science_0_creation_db/ex01/imgs/img_pgAdmin_05.png" alt="Piscine Data Science – Module 0" width="100%">
+</p>
+
 ### Explorar
 
 ```text
 Servers → Piscine DS → Databases → piscineds → Schemas → public → Tables
 ```
 
-Buscar por ID: filtro en la vista de datos o consulta SQL, por ejemplo:
+Buscar por ID en **pgAdmin**: filtro en la vista de datos o consulta SQL, por ejemplo:
 
 ```sql
-SELECT * FROM data_2022_dec WHERE user_id = 576802932 LIMIT 20;
+SELECT * FROM public.data_2022_dec WHERE user_id = 576802932 LIMIT 20;
 ```
+
+<p align="center">
+  <img src="./imgs/img_pgAdmin_10.png" alt="Piscine Data Science – Module 0" width="100%">
+</p>
 
 (Cuando existan `customers` / `items` tras EX01–EX03, también aparecerán aquí.)
 
