@@ -219,8 +219,17 @@ Comprobación rápida de que PostgreSQL vive:
 
 ```bash
 docker ps | grep postgres_piscineds
+```
+```
 docker exec -it postgres_piscineds \
   psql -U "$(whoami)" -d piscineds -c '\dt'
+```
+O también, con una búsqueda ...
+``` bash
+psql -U "$(whoami)" -d piscineds
+```
+```sql
+SELECT * FROM data_2022_dec WHERE user_id = 576802932 LIMIT 20;
 ```
 
 [↑ Volver al índice](#indice)
