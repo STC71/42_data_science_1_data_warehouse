@@ -140,10 +140,12 @@ EOF
 check_docker()
 {
     section "🐳  Docker"
+    info "Comando: command -v docker"
     if ! command -v docker >/dev/null 2>&1; then
         err "Docker no está en el PATH"
         return 1
     fi
+    info "Comando: docker info"
     if ! docker info >/dev/null 2>&1; then
         err "Docker no responde"
         return 1
@@ -155,10 +157,13 @@ check_docker()
 check_postgres()
 {
     section "🐘  PostgreSQL ($CONTAINER_NAME)"
+    info "Comando: docker ps --format '{{.Names}}'"
     if docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "$CONTAINER_NAME"; then
         ok "Contenedor en ejecución"
+        info "Comando: docker ps --filter name=^/$CONTAINER_NAME$ --format ..."
         docker ps --filter "name=^/${CONTAINER_NAME}$" --format "  {{.Status}} | {{.Ports}}" 2>/dev/null || true
         if read_env; then
+            info "Comando: docker exec $CONTAINER_NAME pg_isready -U <usuario> -d <base_de_datos>"
             if docker exec "$CONTAINER_NAME" \
                 pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" >/dev/null 2>&1; then
                 ok "pg_isready OK"
@@ -168,9 +173,11 @@ check_postgres()
         fi
         return 0
     fi
+    info "Comando: docker ps -a --format '{{.Names}}'"
     if docker ps -a --format '{{.Names}}' 2>/dev/null | grep -qx "$CONTAINER_NAME"; then
         warn "Contenedor existe pero está parado"
         if ask_yes_no "¿docker start $CONTAINER_NAME?" "s"; then
+            info "Ejecutando: docker start $CONTAINER_NAME"
             docker start "$CONTAINER_NAME" && sleep 2 && ok "Arrancado" && return 0
         fi
         return 1
@@ -179,7 +186,9 @@ check_postgres()
     info "Levántalo desde Module 0: cd .../data_science_0_creation_db/ex00 && docker-compose up -d"
     if [[ -n "$MODULE0_DIR" && -f "$MODULE0_DIR/ex00/docker-compose.yml" ]]; then
         if ask_yes_no "¿Ejecutar docker-compose up -d en Module 0 ex00?" "s"; then
+            info "Ejecutando: docker-compose up -d"
             ( cd "$MODULE0_DIR/ex00" && docker-compose up -d )
+            info "Esperando 2 segundos a que PostgreSQL inicialice..."
             sleep 2
             docker ps --format '{{.Names}}' | grep -qx "$CONTAINER_NAME" && ok "Arriba" && return 0
         fi
@@ -190,6 +199,7 @@ check_postgres()
 list_tables()
 {
     section "📋  Tablas en piscineds"
+    info "Comando: docker ps --format '{{.Names}}'"
     if ! docker ps --format '{{.Names}}' | grep -qx "$CONTAINER_NAME"; then
         err "Sin contenedor"
         return 1
@@ -198,6 +208,7 @@ list_tables()
     u="$(id -un 2>/dev/null || whoami)"
     d="piscineds"
     read_env && u="$POSTGRES_USER" && d="$POSTGRES_DB"
+    info "Comando: docker exec -i $CONTAINER_NAME psql -U <usuario> -d <base_de_datos> -c '\\dt'\n"
     docker exec -i "$CONTAINER_NAME" \
         psql -U "$u" -d "$d" -c '\dt' 2>/dev/null || warn "No se pudo listar"
     echo
@@ -206,6 +217,7 @@ list_tables()
 check_pgadmin()
 {
     section "🖥️  pgAdmin"
+    info "Comando: curl -s -o /dev/null -w '%{http_code}' --connect-timeout 2 http://127.0.0.1:5050"
     if curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 "http://127.0.0.1:5050" 2>/dev/null | grep -qE '200|302|301|401|403'; then
         ok "Responde en http://127.0.0.1:5050"
         return 0
@@ -253,7 +265,12 @@ start_pgadmin()
 
     # config path si existe
     local cfg="$HOME/sgoinfre/pgadmin4/config"
+    local http_code=""
+    local attempt=0
+    local max_attempts=10
     [[ -d "$cfg" ]] || cfg="$(dirname "$venv")/config"
+    info "Iniciando pgAdmin en segundo plano..."
+    info "Comando: source $venv/bin/activate && nohup pgadmin4 >/tmp/pgadmin4_m1_ex00.log 2>&1 &"
     (
         # shellcheck disable=SC1091
         source "$venv/bin/activate"
@@ -261,13 +278,22 @@ start_pgadmin()
         nohup pgadmin4 >/tmp/pgadmin4_m1_ex00.log 2>&1 &
         echo $! >/tmp/pgadmin4_m1_ex00.pid
     )
-    sleep 3
-    if check_pgadmin; then
-        ok "pgAdmin arrancado → http://127.0.0.1:5050"
-    else
-        warn "No responde aún; mira /tmp/pgadmin4_m1_ex00.log"
-        info "O usa: cd $MODULE0_DIR/ex01 && ./start.sh"
-    fi
+
+    while [[ $attempt -lt $max_attempts ]]; do
+        sleep 1
+        http_code="$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 "http://127.0.0.1:5050" 2>/dev/null)"
+        attempt=$((attempt + 1))
+        if [[ "$http_code" == "200" || "$http_code" == "302" || "$http_code" == "301" || "$http_code" == "401" || "$http_code" == "403" ]]; then
+            printf '\r\033[K'
+            ok "pgAdmin arrancado → http://127.0.0.1:5050"
+            return 0
+        fi
+        printf '\r\033[K%s→ Esperando a que pgAdmin responda... (%d/%d s)%s' "$CYAN" "$attempt" "$max_attempts" "$RESET"
+    done
+
+    printf '\n'
+    warn "pgAdmin aún no responde en el puerto 5050"
+    info "Revisa /tmp/pgadmin4_m1_ex00.log o usa la opción 4 para comprobarlo"
 }
 
 open_module0_start()
@@ -278,6 +304,7 @@ open_module0_start()
         return 1
     fi
     if ask_yes_no "¿Ejecutar el asistente completo de Module 0 EX01?" "n"; then
+        info "Comando: cd $MODULE0_DIR/ex01 && ./start.sh"
         chmod +x "$MODULE0_DIR/ex01/start.sh" 2>/dev/null || true
         ( cd "$MODULE0_DIR/ex01" && ./start.sh )
     fi
