@@ -224,6 +224,10 @@ cd ex01
 python3 customers_table.py
 ```
 
+<p align="center">
+  <img src="./imgs/psql_03.png" alt="Piscine Data Science – Module 1 – Data Warehouse – customers_table.py" width="100%">
+</p>
+
 ### Opción B – SQL dentro del contenedor
 
 ```bash
@@ -252,6 +256,59 @@ UNION ALL SELECT 'feb', COUNT(*) FROM data_2023_feb;
 ```
 
 `COUNT(*)` de `customers` = suma de los cinco meses (con `UNION ALL`).
+
+### Verificación con pgAdmin
+
+Datos de conexión:
+
+| Parámetro | Valor |
+|-----------|-------|
+| Host | `localhost` |
+| Port | `5432` |
+| Database | `piscineds` |
+| Username | tu login (`$(whoami)`) |
+| Password | `mysecretpassword` |
+
+1. Si pgAdmin no está iniciado, arráncalo desde `data_science_1_data_warehouse/`:
+
+  ```bash
+  cd ex00
+  ./start.sh
+  ```
+
+  Como alternativa, puedes arrancarlo manualmente si ya tienes instalado el
+  entorno de pgAdmin en `~/sgoinfre/pgadmin4/`:
+
+  ```bash
+  source ~/sgoinfre/pgadmin4/venv/bin/activate
+  export PYTHONPATH="$HOME/sgoinfre/pgadmin4/config:${PYTHONPATH:-}"
+  nohup pgadmin4 >/tmp/pgadmin4.log 2>&1 &
+  ```
+
+  Si la instalación está en otra ruta, adapta las dos rutas de `~/sgoinfre/pgadmin4/`.
+
+2. Abre <a href="http://127.0.0.1:5050" target="_blank" rel="noopener noreferrer">http://127.0.0.1:5050</a> y conecta al servidor PostgreSQL.
+3. En el panel izquierdo, navega hasta `Servers → ... → Databases → piscineds → Schemas → public → Tables`.
+4. Pulsa **Refresh** sobre `Tables` y confirma que aparece la tabla `customers`.
+5. Haz clic derecho en `customers` → **View/Edit Data** → **All Rows** para comprobar que contiene los eventos.
+
+<p align="center">
+  <img src="./imgs/img_pgAdmin_11.png" alt="Piscine Data Science – Module 1 – Data Warehouse – pgAdmin" width="100%">
+</p>
+
+La misma comprobación desde la terminal es:
+
+```bash
+docker ps --filter name=postgres_piscineds
+docker exec -it postgres_piscineds \
+  psql -U "$(whoami)" -d piscineds -c 'SELECT COUNT(*) FROM public.customers;'
+docker exec -it postgres_piscineds \
+  psql -U "$(whoami)" -d piscineds -c 'SELECT * FROM public.customers LIMIT 20;'
+```
+
+El primer resultado debe coincidir con la suma de las cinco tablas de origen. La
+tabla `customers` debe aparecer dentro de `public → Tables` y mostrar filas al
+abrir **View/Edit Data**.
 
 [↑ Volver al índice](#indice)
 
