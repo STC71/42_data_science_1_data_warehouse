@@ -1,17 +1,17 @@
 -- =============================================================================
--- EX01 – customers table (Module 1 – Data Warehouse)
--- Subject: join all data_202*_*** tables into a table called "customers"
+-- EX01 – tabla customers (Módulo 1 – Data Warehouse)
+-- Objetivo: unir todas las tablas data_202*_*** en una tabla llamada "customers"
 --
--- "Join together" here means stacking monthly event tables (same columns),
--- not a relational JOIN by key. Use UNION ALL so no rows are dropped.
--- Deduplication is EX02; do NOT filter duplicates here.
+-- "Unir" significa apilar las tablas mensuales de eventos (mismas columnas),
+-- no realizar un JOIN relacional mediante una clave. Usa UNION ALL para no perder filas.
+-- La eliminación de duplicados corresponde a EX02; NO filtres duplicados aquí.
 -- =============================================================================
 
 DROP TABLE IF EXISTS customers;
 
--- Explicit UNION ALL of the Module 0 monthly tables.
--- If your BD has different month files, adapt the list or use customers_table.py
--- which discovers every public table matching data_202%.
+-- UNION ALL explícito de las tablas mensuales del Módulo 0, incluida data_2023_feb.
+-- Si tu BD tiene archivos de otros meses, adapta la lista o usa customers_table.py,
+-- que detecta todas las tablas públicas cuyo nombre coincide con data_202%.
 
 CREATE TABLE customers AS
 SELECT * FROM data_2022_oct
@@ -20,8 +20,10 @@ SELECT * FROM data_2022_nov
 UNION ALL
 SELECT * FROM data_2022_dec
 UNION ALL
-SELECT * FROM data_2023_jan;
+SELECT * FROM data_2023_jan
+UNION ALL
+SELECT * FROM data_2023_feb;
 
--- Optional sanity check (run manually after this script):
+-- Comprobación opcional (ejecutar manualmente después de este script):
 -- SELECT COUNT(*) FROM customers;
--- Should equal COUNT(oct)+COUNT(nov)+COUNT(dec)+COUNT(jan).
+-- Debe ser igual a la suma de COUNT(*) de oct, nov, dec, jan y feb.
