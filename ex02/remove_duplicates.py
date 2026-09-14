@@ -37,6 +37,8 @@ from __future__ import annotations
 
 import os
 import sys
+import threading
+import time
 from pathlib import Path
 
 
@@ -169,6 +171,37 @@ def count_customers(cur) -> int:
     return int(row[0]) if row else 0
 
 
+def show_progress(percent: int, label: str, width: int = 34) -> None:
+    """Dibuja una barra de progreso estable en una sola línea."""
+    filled = int(width * percent / 100)
+    bar = "=" * filled + ">" + " " * max(0, width - filled - 1)
+    print(f"\r  [{bar}] {percent:3d}% · {label}", end="", flush=True)
+
+
+def animate_delete(stop_event: threading.Event) -> None:
+    """Mantiene visible actividad mientras PostgreSQL ejecuta el DELETE."""
+    frames = ("   ", ".  ", ".. ", "...")
+    index = 0
+    while not stop_event.wait(0.5):
+        show_progress(35, f"ejecutando DELETE{frames[index]}")
+        index = (index + 1) % len(frames)
+
+
+def execute_delete_with_progress(cur) -> None:
+    """Ejecuta el DELETE y evita que una consulta larga parezca bloqueada."""
+    stop_event = threading.Event()
+    worker = threading.Thread(target=animate_delete, args=(stop_event,), daemon=True)
+    show_progress(25, "preparando DELETE")
+    worker.start()
+    try:
+        cur.execute(DELETE_SQL)
+    finally:
+        stop_event.set()
+        worker.join()
+    show_progress(50, "DELETE completado")
+    print()
+
+
 def main() -> None:
     """
     Punto de entrada:
@@ -191,13 +224,17 @@ def main() -> None:
                 print(f"COUNT(*) antes:  {before}")
 
                 print("Ejecutando DELETE (ventana LAG, partición por claves de negocio)...")
-                print("Puede tardar varios minutos con ~20 millones de filas. Espera, por favor.")
-                cur.execute(DELETE_SQL)
+                print("☕ Puede tardar varios minutos con ~20 millones de filas. Paciencia 🙏")
+                print("  Progreso por fases: PostgreSQL no expone un porcentaje de filas para este DELETE.")
+                execute_delete_with_progress(cur)
                 # rowcount = filas afectadas según el driver (a veces -1 si no aplica)
                 deleted = cur.rowcount if cur.rowcount is not None and cur.rowcount >= 0 else None
 
+                show_progress(75, "verificando COUNT(*)")
                 after = count_customers(cur)
                 conn.commit()  # guarda los borrados de forma definitiva
+                show_progress(100, "proceso terminado")
+                print()
 
                 print(f"COUNT(*) después: {after}")
                 if deleted is not None:

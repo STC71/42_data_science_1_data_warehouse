@@ -218,6 +218,10 @@ Esperado:
 - La tabla sigue llamándose **`customers`**.  
 - Las columnas no cambian.
 
+<p align="center">
+  <img src="./imgs/psql_04.png" alt="Module 1 – EX02 – Remove duplicates – Comprobaciones" width="100%">
+</p>
+
 Muestra:
 
 ```sql
