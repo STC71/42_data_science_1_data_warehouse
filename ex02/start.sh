@@ -4,7 +4,7 @@
 # PISCINE PEDAGO - DATA SCIENCE
 # Module 1 – Data Warehouse – EX02 remove duplicates
 #
-# sternero – 42 Málaga – 2026
+# sternero – 42 Málaga – Octubre 2026
 #
 # Asistente opcional (NO sustituye remove_duplicates.*)
 # - Comprueba PostgreSQL / tabla customers

@@ -1,7 +1,7 @@
 # 🧹 Ejercicio 02 – Remove duplicates
 
 <p align="center">
-  <img src="../imgs/banner_02.jpg" alt="Module 1 – EX02 – Remove duplicates" width="100%">
+  <img src="../imgs/banner_11.jpg" alt="Module 1 – EX02 – Remove duplicates" width="100%">
 </p>
 
 [← Volver al README principal](../README.md) · [← EX01](../ex01/README.md) · [EX03 →](../ex03/README.md)
@@ -40,7 +40,7 @@ Según el **subject** (Module 1 – Data Warehouse – EX02):
 | Acción | Eliminar duplicados **y** casi-duplicados a 1 s |
 | Entrega | `ex02/remove_duplicates.*` (`.sql`, `.py`, …) |
 
-Ejemplo del PDF:
+Ejemplo:
 
 ```text
 2022-10-01 00:00:32  remove_from_cart  product 5779403
@@ -281,9 +281,8 @@ SELECT * FROM customers ORDER BY event_time LIMIT 5;
 - [← EX01 – customers](../ex01/README.md)
 - [📘 sql.md](./sql.md)
 - [🐍 python.md](./python.md)
-- [🎛️ start.sh](./start.sh)
 - [EX03 – fusion →](../ex03/README.md)
 
 ---
 
-*Piscine Data Science – Module 1 – EX02 – sternero – 42 Málaga – 2026*
+*Piscine Data Science – Module 1 – EX02 – sternero – 42 Málaga – Octubre 2026*

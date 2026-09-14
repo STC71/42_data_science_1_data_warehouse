@@ -1,5 +1,9 @@
 # 📘 Guía SQL – EX02 Remove duplicates
 
+<p align="center">
+  <img src="./imgs/sql_01.jpg" alt="Module 1 – EX02 – Remove duplicates – sql.md" width="100%">
+</p>
+
 [← README EX02](./README.md) · [← Module 1](../README.md)
 
 ---
@@ -231,4 +235,4 @@ Opcional (antes/después si comentas las líneas en el `.sql`):
 
 ---
 
-*Module 1 – EX02 – Guía SQL – sternero – 42 Málaga – 2026*
+*Module 1 – EX02 – Guía SQL – sternero – 42 Málaga – Octubre 2026*

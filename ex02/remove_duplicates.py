@@ -4,30 +4,36 @@
 EX02 – remove_duplicates.py
 Module 1 – Data Warehouse – Piscine Data Science
 
-Subject:
-  Delete the duplicate rows in the "customers" table.
-  Also remove rows that are the same instruction sent twice with a
-  1 second interval (see subject example with remove_from_cart).
+Qué pide el subject:
+  Borrar las filas duplicadas de la tabla "customers".
+  También eliminar los casos en que el servidor registra la misma
+  instrucción dos veces con un intervalo de 1 segundo
+  (ejemplo del PDF: remove_from_cart del mismo producto a las
+  00:00:32 y 00:00:33).
 
-What this script does:
-  1) Reads DB credentials from Module 0 ex00/.env when possible
-  2) Prints COUNT(*) before the cleanup
-  3) Runs one SQL DELETE using a window function (LAG):
-       - same user_id, user_session, event_type, product_id, price
-       - previous event_time within 0..1 second → delete the later row
-  4) Prints COUNT(*) after the cleanup
+Qué hace este script:
+  1) Lee las credenciales de Module 0 (ex00/.env) cuando las encuentra
+  2) Muestra COUNT(*) ANTES de la limpieza
+  3) Ejecuta un único DELETE en SQL con función de ventana (LAG):
+       - misma instrucción = mismos user_id, user_session,
+         event_type, product_id, price
+       - si el event_time respecto al anterior del grupo es ≤ 1 segundo
+         → se borra la fila posterior (se conserva la primera)
+  4) Muestra COUNT(*) DESPUÉS de la limpieza
 
-Analogy:
-  The server sometimes "stutters" and records the same customer action
-  twice almost at the same moment. We keep the first note and throw away
-  the echo that arrives within one second.
+Analogía:
+  A veces el servidor "tartamudea" y anota dos veces la misma acción
+  del cliente casi al mismo momento. Nos quedamos con la primera nota
+  y descartamos el eco que llega en el plazo de un segundo.
 
-Usage:
+Uso:
   python3 remove_duplicates.py
   ./remove_duplicates.py
 """
 
 from __future__ import annotations
+
+# annotations permite escribir tipos modernos (ej. Path | None) de forma clara
 
 import os
 import sys
@@ -35,13 +41,17 @@ from pathlib import Path
 
 
 def ensure_dependencies() -> None:
-    """Install psycopg2 / dotenv for the current user if missing (no sudo)."""
+    """
+    Comprueba si faltan librerías e intenta instalarlas para el usuario actual
+    (sin sudo), típico en el campus 42.
+    """
     import importlib.util
     import subprocess
 
+    # Módulo a importar → paquete a instalar con pip
     needed = {
-        "psycopg2": "psycopg2-binary",
-        "dotenv": "python-dotenv",
+        "psycopg2": "psycopg2-binary",  # hablar con PostgreSQL
+        "dotenv": "python-dotenv",      # leer el archivo .env
     }
     missing = [
         pkg
@@ -49,7 +59,7 @@ def ensure_dependencies() -> None:
         if importlib.util.find_spec(mod) is None
     ]
     if missing:
-        print(f"Installing: {', '.join(missing)} ...")
+        print(f"Instalando: {', '.join(missing)} ...")
         subprocess.check_call(
             [sys.executable, "-m", "pip", "install", "--user", *missing]
         )
@@ -61,14 +71,19 @@ import psycopg2
 from dotenv import load_dotenv
 
 # ---------------------------------------------------------------------------
-# Paths: this file lives in .../data_science_1_data_warehouse/ex02/
-# Module 0 is usually a sibling: .../data_science_0_creation_db/
+# Rutas: este archivo vive en .../data_science_1_data_warehouse/ex02/
+# Module 0 suele ser hermano: .../data_science_0_creation_db/
 # ---------------------------------------------------------------------------
 SCRIPT_DIR = Path(__file__).resolve().parent
 MODULE1_DIR = SCRIPT_DIR.parent
 
+
 def find_env_file() -> Path | None:
-    """Locate Module 0 ex00/.env without hardcoding one campus path."""
+    """
+    Busca el .env de Module 0 (ex00) sin fijar la ruta de un solo login.
+    Prueba varias ubicaciones habituales en el campus.
+    Devuelve la ruta si existe, o None si no se encuentra.
+    """
     candidates = [
         MODULE1_DIR.parent / "data_science_0_creation_db" / "ex00" / ".env",
         MODULE1_DIR / ".." / "data_science_0_creation_db" / "ex00" / ".env",
@@ -98,8 +113,9 @@ def find_env_file() -> Path | None:
 
 ENV_PATH = find_env_file()
 if ENV_PATH is not None:
-    load_dotenv(ENV_PATH)
+    load_dotenv(ENV_PATH)  # carga POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB
 
+# Parámetros de conexión a la base (Docker publica el 5432 en localhost)
 DB_CONFIG = {
     "host": "localhost",
     "port": 5432,
@@ -108,7 +124,7 @@ DB_CONFIG = {
     "password": os.environ.get("POSTGRES_PASSWORD", "mysecretpassword"),
 }
 
-# Same DELETE as remove_duplicates.sql (keep SQL logic in one place conceptually)
+# Misma sentencia que remove_duplicates.sql (la lógica vive en el servidor SQL)
 DELETE_SQL = """
 DELETE FROM customers AS c
 USING (
@@ -138,52 +154,68 @@ WHERE c.ctid = d.rid;
 
 
 def get_connection():
-    """Open a connection to PostgreSQL (Docker publishes 5432 on localhost)."""
+    """
+    Abre una conexión con PostgreSQL.
+    **DB_CONFIG descompone el diccionario en argumentos con nombre
+    (host=..., port=..., etc.).
+    """
     return psycopg2.connect(**DB_CONFIG)
 
 
 def count_customers(cur) -> int:
+    """Devuelve el número de filas actuales de la tabla customers."""
     cur.execute("SELECT COUNT(*) FROM customers;")
     row = cur.fetchone()
     return int(row[0]) if row else 0
 
 
 def main() -> None:
+    """
+    Punto de entrada:
+      conectar → contar → borrar ecos/duplicados → contar → confirmar cambios
+    """
     print("EX02 – remove_duplicates")
-    print("Table: customers")
-    print("Rule: same instruction + time gap ≤ 1 second → keep one row")
+    print("Tabla: customers")
+    print("Regla: misma instrucción + diferencia de tiempo ≤ 1 segundo → una sola fila")
     if ENV_PATH:
         print(f".env: {ENV_PATH}")
     else:
-        print(".env: not found (using defaults / environment)")
+        print(".env: no encontrado (se usan valores por defecto / variables de entorno)")
     print()
 
     try:
         with get_connection() as conn:
             with conn.cursor() as cur:
+                # cursor = canal para enviar SQL y leer resultados
                 before = count_customers(cur)
-                print(f"COUNT(*) before: {before}")
+                print(f"COUNT(*) antes:  {before}")
 
-                print("Running DELETE (window LAG, partition by business keys)...")
-                print("This can take several minutes on ~20M rows. Please wait.")
+                print("Ejecutando DELETE (ventana LAG, partición por claves de negocio)...")
+                print("Puede tardar varios minutos con ~20 millones de filas. Espera, por favor.")
                 cur.execute(DELETE_SQL)
+                # rowcount = filas afectadas según el driver (a veces -1 si no aplica)
                 deleted = cur.rowcount if cur.rowcount is not None and cur.rowcount >= 0 else None
 
                 after = count_customers(cur)
-                conn.commit()
+                conn.commit()  # guarda los borrados de forma definitiva
 
-                print(f"COUNT(*) after:  {after}")
+                print(f"COUNT(*) después: {after}")
                 if deleted is not None:
-                    print(f"Rows deleted (driver report): {deleted}")
+                    print(f"Filas borradas (informe del driver): {deleted}")
                 else:
-                    print(f"Rows removed (before - after): {before - after}")
+                    print(f"Filas eliminadas (antes - después): {before - after}")
                 print()
-                print("Done.")
+                print("Proceso terminado.")
     except psycopg2.Error as exc:
-        print("PostgreSQL error:", exc, file=sys.stderr)
-        print("Check: docker ps, .env, table customers exists (EX01).", file=sys.stderr)
+        print("Error de PostgreSQL:", exc, file=sys.stderr)
+        print(
+            "Revisa: docker ps, archivo .env, y que exista la tabla customers (EX01).",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
 
 if __name__ == "__main__":
+    # Solo se ejecuta main() si lanzamos este archivo directamente
+    # (python3 remove_duplicates.py), no si otro script lo importa
     main()
