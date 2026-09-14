@@ -210,6 +210,10 @@ descubre sin tener que editar una lista fija.
 3. `CREATE TABLE customers AS … UNION ALL …`  
 4. Imprime `COUNT(*)`
 
+<p align="center">
+  <img src="./imgs/diagrama_py.png" alt="Piscine Data Science – Module 1 – Data Warehouse – customers_table.py" width="100%">
+</p>
+
 [↑ Volver al índice](#indice)
 
 ---
@@ -272,7 +276,6 @@ Datos de conexión:
 1. Si pgAdmin no está iniciado, arráncalo desde `data_science_1_data_warehouse/`:
 
   ```bash
-  cd ex00
   ./start.sh
   ```
 
@@ -338,4 +341,5 @@ abrir **View/Edit Data**.
 
 ---
 
-*Module 1 – EX01 – sternero – 42 Málaga*
+**Piscine Data Science – Module 1 – Data Warehouse – EX01*  
+*sternero – 42 Málaga – Octubre de 2026*

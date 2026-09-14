@@ -259,4 +259,4 @@ SELECT * FROM data_2022_dec WHERE user_id = 576802932 LIMIT 20;
 ---
 
 *Piscine Data Science – Module 1 – Data Warehouse – EX00*  
-*sternero – 42 Málaga – Septiembre de 2026*
+*sternero – 42 Málaga – Octubre de 2026*
