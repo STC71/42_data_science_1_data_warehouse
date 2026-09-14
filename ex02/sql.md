@@ -4,7 +4,7 @@
   <img src="./imgs/sql_01.jpg" alt="Module 1 – EX02 – Remove duplicates – sql.md" width="100%">
 </p>
 
-[← README EX02](./README.md) · [← Module 1](../README.md)
+[← README ex02](./README.md)
 
 ---
 
@@ -42,7 +42,7 @@ No hace falta ser experto en SQL: vamos con analogías y el mismo espíritu que 
 El PDF pide:
 
 1. Eliminar filas **duplicadas** en `customers`.  
-2. Eliminar también el caso en que el servidor envía **la misma instrucción** con **1 segundo** de diferencia.
+2. Eliminar también el caso en que el servidor envía **la misma instrucción** con hasta **1 segundo** de diferencia.
 
 Traducción a reglas técnicas:
 

@@ -4,7 +4,7 @@
   <img src="./imgs/python_01.jpg" alt="Module 1 – EX02 – Remove duplicates – python.md" width="100%">
 </p>
 
-[← README EX02](./README.md) · [← sql.md](./sql.md) · [← Module 1](../README.md)
+[← README ex02](./README.md)
 
 ---
 
