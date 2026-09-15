@@ -29,10 +29,46 @@ Uso:
 """
 
 from __future__ import annotations
+# __future__ es un módulo especial que permite usar características de Python 3.10+ 
+# en versiones anteriores (3.7+). Aquí se usa para permitir anotaciones de tipo con 
+# "Path | None" en lugar de "Optional[Path]". 
+# Entendemos por anotaciones a las declaraciones de tipo que se pueden usar para 
+# indicar qué tipo de datos se espera en variables, parámetros de funciones y valores 
+# de retorno. Por ejemplo: en este caso para la función find_env_file() se indica 
+# que puede devolver un objeto Path o None.
+# Path sería para representar rutas de archivos y directorios.
+# None representa la ausencia de valor (similar a null en otros lenguajes).
+# annotations es una característica que importamos de __future__ para permitir el uso 
+# de las anotaciones descritas anteriormente.
+
 
 import os
+# os es un módulo estándar de Python que proporciona funciones para interactuar con 
+# el sistema operativo. Lo necesitamos para acceder a variables de entorno (como 
+# POSTGRES_DB, POSTGRES_USER y POSTGRES_PASSWORD) y para obtener el nombre del 
+# usuario actual con os.environ.get("USER").
 import sys
+# sys es un módulo estándar de Python que proporciona acceso a algunas variables y
+# funciones del intérprete de Python. Lo necesitamos para salir del programa con
+# sys.exit() en caso de error y para obtener la ruta del ejecutable de Python con
+# sys.executable.
 from pathlib import Path
+# Path es, un módulo estándar de Pyton, dicho de otro modo, es una clase dentro del 
+# módulo pathlib que proporciona una forma orientada a objetos de trabajar con 
+# rutas de archivos y directorios. Lo necesitamos para construir rutas de archivos 
+# de forma más legible y segura que usando cadenas de texto.
+# Lo importamos desde pathlib para poder usar Path(__file__).resolve().parent y
+# otras funciones de Path presentes en el código y disponibles en pathlib que es 
+# el módulo que proporciona la funcionalidad de Path.
+# La diferencia entre este Path y el de annotations es que este Path es una clase 
+# que nos permite trabajar con rutas de archivos y directorios, mientras que el 
+# Path de annotations es un tipo de dato que se usa para indicar que una variable 
+# o parámetro puede ser un objeto Path o None.
+# Ejemplo sencillo: el de annotations es como si dijéramos "puede ser un coche o nada",
+# mientras que el de pathlib es como si dijéramos "es un coche con ruedas, motor y volante".
+# Que ambos se llamen Path es una coincidencia, pero no son lo mismo.
+# Es más bien una broma de mal gusto de los desarrolladores de Python, que decidieron 
+# usar el mismo nombre para dos cosas diferentes.
 
 
 def ensure_dependencies() -> None:
