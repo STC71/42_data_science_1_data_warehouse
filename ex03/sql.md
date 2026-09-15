@@ -1,7 +1,10 @@
 # 📘 Guía SQL – EX03 Fusion
 
-[← README EX03](./README.md) · [← Module 1](../README.md)
+<p align="center">
+  <img src="./imgs/sql_02.jpg" alt="Module 1 – EX03 – Fusion – python.md" width="100%">
+</p>
 
+[← README EX03](./README.md)
 ---
 
 <a id="indice"></a>
@@ -190,4 +193,4 @@ SELECT COUNT(*) FILTER (WHERE brand IS NULL) AS sin_marca FROM customers;
 
 ---
 
-*Module 1 – EX03 – Guía SQL – sternero – 42 Málaga – 2026*
+*Module 1 – EX03 – Guía SQL – sternero – 42 Málaga – Octubre 2026*

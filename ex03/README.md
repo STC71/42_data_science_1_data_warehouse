@@ -1,7 +1,7 @@
 # 🔗 Ejercicio 03 – Fusion
 
 <p align="center">
-  <img src="../imgs/banner_03.jpg" alt="Module 1 – EX03 – Fusion" width="100%">
+  <img src="../imgs/banner_12.jpg" alt="Module 1 – EX03 – Fusion" width="100%">
 </p>
 
 [← Volver al README principal](../README.md) · [← EX02](../ex02/README.md)
@@ -268,4 +268,4 @@ SELECT COUNT(*) FILTER (WHERE category_id IS NULL) AS sin_match FROM customers;
 
 ---
 
-*Piscine Data Science – Module 1 – EX03 – sternero – 42 Málaga – 2026*
+*Piscine Data Science – Module 1 – EX03 – sternero – 42 Málaga – Octubre 2026*

@@ -32,10 +32,18 @@ Para quien prefiere lanzar la limpieza de `customers` con:
 ```bash
 python3 remove_duplicates.py
 ```
+O mediante:
+```bash
+chmod +x remove_duplicates.py; ./remove_duplicates.py
+```
 
 y quiere entender el código **sin** asumir experiencia previa en Python.
 
 La lógica de negocio es la misma que en [`remove_duplicates.sql`](./remove_duplicates.sql); Python solo **conecta**, **ejecuta** y **muestra** los conteos.
+
+<p align="center">
+  <img src="./imgs/diagrama_py.png" alt="Module 1 – EX02 – Remove duplicates – Diagrama de flujo" width="100%">
+</p>
 
 [↑ Volver al índice](#indice)
 

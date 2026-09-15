@@ -1,6 +1,10 @@
 # 🐍 Guía Python – EX03 Fusion
 
-[← README EX03](./README.md) · [← sql.md](./sql.md) · [← Module 1](../README.md)
+<p align="center">
+  <img src="./imgs/python_02.jpg" alt="Module 1 – EX03 – Fusion – python.md" width="100%">
+</p>
+
+[← README EX03](./README.md)
 
 ---
 
@@ -153,4 +157,4 @@ O con [`start.sh`](./start.sh).
 
 ---
 
-*Module 1 – EX03 – Guía Python – sternero – 42 Málaga – 2026*
+*Module 1 – EX03 – Guía Python – sternero – 42 Málaga – Octubre 2026*

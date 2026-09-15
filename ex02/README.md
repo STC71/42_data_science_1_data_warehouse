@@ -124,6 +124,10 @@ Usamos una **función de ventana** `LAG`:
 
 `ctid` es el identificador físico interno de PostgreSQL; solo sirve para señalar qué fila borrar, no forma parte del modelo de negocio.
 
+<p align="center">
+  <img src="./imgs/diagrama_py.png" alt="Module 1 – EX02 – Remove duplicates – Diagrama de flujo" width="100%">
+</p>
+
 Detalle línea a línea:
 
 - SQL → **[sql.md](./sql.md)**  
