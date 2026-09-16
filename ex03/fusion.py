@@ -74,23 +74,76 @@ from pathlib import Path
 def ensure_dependencies() -> None:
     """Instala psycopg2 y python-dotenv para el usuario si faltan (sin sudo)."""
     import importlib.util
+    # importlib.util es un módulo estándar de Python que proporciona funciones para
+    # trabajar con módulos y paquetes de Python. Lo necesitamos para comprobar si
+    # los módulos psycopg2 y dotenv están instalados en el entorno de Python actual.
     import subprocess
+    # subprocess es un módulo estándar de Python que permite ejecutar comandos del
+    # sistema operativo desde un script de Python. Lo necesitamos para instalar los
+    # paquetes necesarios usando pip si no están presentes.
 
     needed = {
         "psycopg2": "psycopg2-binary",
         "dotenv": "python-dotenv",
     }
+    # needed es un diccionario que mapea los nombres de los módulos que necesitamos
+    # importar (psycopg2 y dotenv) a los nombres de los paquetes que
+    # debemos instalar con pip (psycopg2-binary y python-dotenv).
+    # El diccionario se llama needed pero podría llamarse "dependencias" o "requerimientos"
+    # Los diccionarios son estructuras de datos que permiten almacenar pares de clave-valor,
+    # es decir, cada elemento del diccionario tiene una clave (key) y un valor (value). 
+    # Es algo así como un diccionario de palabras, donde la clave es la palabra y el valor 
+    # es su definición. En este caso, la clave es el nombre del módulo y el valor es el 
+    # nombre del paquete que se va a instalar con pip.
     missing = [
         pkg
         for mod, pkg in needed.items()
-        if importlib.util.find_spec(mod) is None
+            if importlib.util.find_spec(mod) is None
     ]
+    # missing es una lista que contiene los nombres de los paquetes que faltan por instalar.
+    # Una lista es una estructura de datos que permite almacenar varios elementos en un solo objeto,
+    # es algo así como cuando apuntamos varias cosas en una lista de la compra (leche = 1, pan = 2, 
+    # huevos = 12 ...). Las tuplas son similares a las listas, pero son inmutables 
+    # (no se pueden cambiar una vez creadas).
+    # La llamamos missing pero podría llamarse "faltantes" o "no_instalados".
+    # pkg es el nombre del paquete que se va a instalar con pip. Lo llamamos pkg pero 
+    # podría llamarse "paquete" o "nombre_paquete".
+    # for inicia un bucle que recorre los elementos del diccionario needed. 
+    # mod es el nombre del módulo que se va a importar. Lo llamamos mod pero 
+    # podría llamarse "modulo" o "nombre_modulo".
+    # Con in decimos que queremos recorrer todos los elementos del diccionario needed.
+    # Con .items() que es un método nativo de los diccionarios que devuelve una lista de 
+    # tuplas (clave, valor) obtenemos tanto el nombre del módulo como el nombre del paquete
+    # que necesitamos instalar. 
+    # O sea, en el ciclo for estamos diciendo algó así como "para cada módulo y paquete en el 
+    # diccionario needed, si no se encuentra el módulo, añade el paquete a la lista missing".
+    # El if importlib.util.find_spec(mod) is None comprueba si el módulo mod está instalado en el
+    # entorno de Python actual. Si no está instalado, find_spec devuelve None y el paquete
+    # correspondiente se añade a la lista missing. La condición if se repite para cada módulo en 
+    # needed mediante el bucle for. Si el módulo está instalado, find_spec devuelve un objeto de 
+    # especificación del módulo y la condición if no se cumple, por lo que el paquete no se añade 
+    # a missing.
     if missing:
         print(f"Instalando: {', '.join(missing)} ...")
         subprocess.check_call(
             [sys.executable, "-m", "pip", "install", "--user", *missing]
         )
-
+    # Si la lista missing no está vacía, significa que faltan paquetes por instalar. En ese caso,
+    # se imprime un mensaje indicando qué paquetes se van a instalar. 
+    # join(missing) convierte la lista de paquetes en una cadena separada por comas.
+    # subprocess es un módulo que permite ejecutar comandos del sistema operativo desde Python.
+    #.check_call es una función nativa de subprocess que ejecuta un comando y espera a que termine.
+    # [sys.executable, "-m", "pip", "install", "--user", *missing] es la lista de argumentos que 
+    # se pasa al comando. En concreto sys (sistema) es un módulo que proporciona acceso a algunas 
+    # variables y funciones del intérprete de Python.
+    # En concreto, sys.executable es algo así como un "atajo" que nos dice dónde está instalado 
+    # Python en el sistema operativo para poder usarlo en el comando de instalación de paquetes.
+    # "-m pip" indica que se quiere ejecutar el módulo pip, 
+    # "install" es la acción que se quiere realizar, 
+    # "--user" indica que se quiere instalar el paquete para el usuario actual que se obtiene de 
+    # la variable de entorno USER,
+    # y *missing es una forma de pasar todos los elementos de la lista missing como argumentos a
+    # el comando pip install.
 
 ensure_dependencies()
 
@@ -102,7 +155,14 @@ MODULE1_DIR = SCRIPT_DIR.parent
 
 
 def find_env_file() -> Path | None:
-    """Localiza Module 0 ex00/.env sin hardcodear un único path de campus."""
+    """Localiza Module 0 ex00/.env sin hardcodear un único path de campus.
+        def es una palabra reservada en Python que se utiliza para definir funciones.
+        find_env_file es el nombre de la función que estamos definiendo.
+        Path | None indica que la función puede devolver un objeto Path o None.
+        -> es para indicar el tipo de retorno de la función, algo así como el return 
+        en otros lenguajes.
+    """
+
     candidates = [
         MODULE1_DIR.parent / "data_science_0_creation_db" / "ex00" / ".env",
         MODULE1_DIR / ".." / "data_science_0_creation_db" / "ex00" / ".env",
@@ -123,6 +183,15 @@ def find_env_file() -> Path | None:
         / "ex00"
         / ".env",
     ]
+    # candidates es una lista de rutas de archivos que se van a comprobar para ver 
+    # si existe un archivo .env.
+    # MODULE1_DIR.parent es la ruta del directorio que contiene el módulo 1 (data_science_1_data_warehouse).
+    # MODULE1_DIR es un objeto Path que representa la ruta del directorio que contiene el script fusion.py
+    # con el .parent obtenemos el directorio padre de MODULE1_DIR, es decir, el directorio que contiene 
+    # data_science_1_data_warehouse. El término "parent" se refiere a la relación jerárquica entre directorios, .
+    # MODULE1_DIR / ".." es otra forma de referirse al directorio padre de MODULE1_DIR.
+    # Path.home() es la ruta del directorio home del usuario actual.
+    # 
     for path in candidates:
         path = path.resolve()
         if path.is_file():

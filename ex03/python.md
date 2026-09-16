@@ -53,6 +53,10 @@ La lógica pesada es **SQL** (LEFT JOIN); Python conecta, ejecuta y muestra resu
 7. Contar filas con/sin match en items
 ```
 
+<p align="center">
+  <img src="./imgs/diagrama_py_fusion.png" alt="Module 1 – EX03 – Fusion – Diagrama de flujo fusion.py" width="100%">
+</p>
+
 [↑ Volver al índice](#indice)
 
 ---
@@ -124,8 +128,15 @@ No se hace el JOIN fila a fila en Python (sería inviable con ~19 M filas).
 cd ruta/a/ex03
 python3 fusion.py
 ```
+O con...
+```bash
+chmod +x fusion.py; ./fusion.py
+```
 
-O con [`start.sh`](./start.sh).
+O mediante el script [`start.sh`](./start.sh).
+```bash
+chmod +x start.sh; ./start.sh
+```
 
 [↑ Volver al índice](#indice)
 

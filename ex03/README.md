@@ -75,6 +75,10 @@ La fusión **pega la ficha del producto** en cada acción, usando `product_id` c
 
 Si un producto del historial **no** está en el catálogo, **no tiramos** esa acción: dejamos categoría/marca a NULL. Así no se pierde información.
 
+<p align="center">
+  <img src="./imgs/diagrama_py_fusion.png" alt="Module 1 – EX03 – Fusion – Diagrama de flujo fusion.py" width="100%">
+</p>
+
 [↑ Volver al índice](#indice)
 
 ---
