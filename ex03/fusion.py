@@ -145,14 +145,39 @@ def ensure_dependencies() -> None:
     # y *missing es una forma de pasar todos los elementos de la lista missing como argumentos a
     # el comando pip install.
 
-ensure_dependencies()
+ensure_dependencies()       
+# Llama a la función ensure_dependencies() para asegurarse de que los paquetes necesarios
+# estén instalados antes de continuar con el resto del script.
 
 import psycopg2
+# psycopg2 es un módulo externo que proporciona una interfaz para conectarse y trabajar con 
+# bases de datos PostgreSQL desde Python. Lo necesitamos para ejecutar consultas SQL y manipular 
+# datos en la base de datos.
 from dotenv import load_dotenv
+# dotenv es un módulo externo que permite cargar variables de entorno desde un archivo .env.
+# import load_dotenv es una forma de importar solo la función load_dotenv del módulo dotenv,
+# en lugar de importar todo el módulo. Esto hace que el código sea más limpio y evita
+# posibles conflictos de nombres con otras funciones o variables que puedan tener el mismo nombre
+# en el módulo dotenv. La función load_dotenv se encarga de leer el archivo .env y cargar 
+# las variables de entorno definidas en él en el entorno de ejecución de Python.
 
 SCRIPT_DIR = Path(__file__).resolve().parent
+# SCRIPT_DIR es una variable que contendrá la ruta del directorio donde se encuentra este script.
+# Path(__file__) es la ruta del archivo actual (fusion.py).
+# .resolve() convierte la ruta relativa en una ruta absoluta. O sea, nos da la ruta completa desde 
+# la raíz del sistema de archivos hasta fusion.py.
+# .parent obtiene el directorio padre de fusion.py, que es ex03.
+# Estamos guardando en SCRIPT_DIR algo así como:
+# /home/usuario/piscine_pedago_data_science/data_science_1_data_warehouse/ex03
 MODULE1_DIR = SCRIPT_DIR.parent
-
+# MODULE1_DIR es una variable que contendrá la ruta del directorio padre de SCRIPT_DIR,
+# que es data_science_1_data_warehouse. O sea, nos da la ruta completa desde la raíz del sistema 
+# de archivos hasta data_science_1_data_warehouse sin el subdirectorio ex03.
+# Estamos guardando en MODULE1_DIR algo así como:
+# /home/usuario/piscine_pedago_data_science/data_science_1_data_warehouse
+# Usamos dos variables (SCRIPT_DIR y MODULE1_DIR) para poder construir rutas relativas a este script 
+# sin depender del directorio actual desde el que se ejecute el script. 
+# Esto hace que el código sea más robusto y portátil.
 
 def find_env_file() -> Path | None:
     """Localiza Module 0 ex00/.env sin hardcodear un único path de campus.
@@ -162,46 +187,79 @@ def find_env_file() -> Path | None:
         -> es para indicar el tipo de retorno de la función, algo así como el return 
         en otros lenguajes.
     """
-
     candidates = [
-        MODULE1_DIR.parent / "data_science_0_creation_db" / "ex00" / ".env",
-        MODULE1_DIR / ".." / "data_science_0_creation_db" / "ex00" / ".env",
-        Path.home()
-        / "sgoinfre"
-        / "42_outer_core"
-        / "piscine_pedago_data_science"
-        / "data_science_0_creation_db"
-        / "ex00"
-        / ".env",
-        Path.home()
-        / "sgoinfre"
-        / "students"
-        / (os.environ.get("USER") or "")
-        / "42_outer_core"
-        / "piscine_pedago_data_science"
+        MODULE1_DIR.parent 
         / "data_science_0_creation_db"
         / "ex00"
         / ".env",
     ]
-    # candidates es una lista de rutas de archivos que se van a comprobar para ver 
-    # si existe un archivo .env.
-    # MODULE1_DIR.parent es la ruta del directorio que contiene el módulo 1 (data_science_1_data_warehouse).
-    # MODULE1_DIR es un objeto Path que representa la ruta del directorio que contiene el script fusion.py
-    # con el .parent obtenemos el directorio padre de MODULE1_DIR, es decir, el directorio que contiene 
-    # data_science_1_data_warehouse. El término "parent" se refiere a la relación jerárquica entre directorios, .
-    # MODULE1_DIR / ".." es otra forma de referirse al directorio padre de MODULE1_DIR.
-    # Path.home() es la ruta del directorio home del usuario actual.
-    # 
+    """
+    La ruta se construye desde la ubicación de este script, no desde el directorio actual.
+    Por eso funciona aunque fusion.py se ejecute desde otra carpeta.
+    candidates es una lista que contiene posibles rutas donde se puede encontrar el archivo .env.
+    En nuestro caso, solo hay una ruta candidata, que es la ruta relativa a este script.
+    En concreto, la ruta candidata calculada a partir de __file__ sería algo así como:
+    fusion.py
+      -> ex03
+      -> data_science_1_data_warehouse
+      -> piscine_pedago_data_science
+      -> data_science_0_creation_db/ex00/.env
+    __file__ es una variable especial de Python que contiene la ruta del archivo actual (fusion.py).
+    MODULE1_DIR es una variable que contiene la ruta del directorio donde se encuentra este script (ex03).
+    MODULE1_DIR.parent es la ruta del directorio padre de ex03, que es data_science_1_data_warehouse.
+    El nombre 'candidates' para la lista también podría ser 'posibles_rutas' o 'rutas_candidatas'.
+    MODULE1_DIR no es más que una variable que podría llamarse 'directorio_modulo1' o 'ruta_modulo1'.
+    ¿Por qué usamos MODULE1_DIR dentro de la lista candidates cuando antes la igualamos a SCRIPT_DIR.parent? 
+    Porque queremos construir la ruta relativa a este script, y MODULE1_DIR ya contiene la ruta del directorio 
+    padre de ex03, que es data_science_1_data_warehouse. De esta forma, podemos concatenar las subcarpetas 
+    "data_science_0_creation_db/ex00/.env" a MODULE1_DIR para obtener la ruta completa del archivo .env.
+    O sea, el resultado/valor final de la lista candidates sería algo así como:
+        /ruta/completa/a/data_science_1_data_warehouse/data_science_0_creation_db/ex00/.env
+    Mientras que el valor de MODULE1_DIR sería algo así como:
+        /ruta/completa/a/data_science_1_data_warehouse
+    ¿Por qué candidates es una lista y no una variable única? 
+    Porque en teoría podrían existir varios lugares donde se podría encontrar el archivo .env, aunque en 
+    nuestro caso solo hay uno. Si en el futuro se añadieran más rutas candidatas, bastaría con añadirlas
+    a la lista candidates y la función find_env_file() seguiría funcionando sin cambios.
+    """
     for path in candidates:
         path = path.resolve()
         if path.is_file():
             return path
+    # El ciclo for anterior recorre cada ruta candidata en la lista candidates.
+    # path es simplemente una variable que podría llamarse "ruta" o "archivo". 
+    # Su valor cambia en cada iteración del bucle for, tomando el valor de cada elemento de candidates.
+    # in es una palabra reservada en Python que se utiliza para comprobar si un elemento está presente 
+    # en una secuencia (como una lista, tupla o cadena de texto). En este caso, se utiliza para recorrer 
+    # cada ruta candidata en la lista candidates.
+    # path.resolve() convierte la ruta relativa en una ruta absoluta. En nuestro caso, ya que candidates 
+    # contiene rutas absolutas, esto no cambia nada.
+    # Ruta relativa: es una ruta que se especifica en relación a otra ruta (por ejemplo, "./ex00/.env" 
+    # significa "el archivo .env dentro del subdirectorio ex00 del directorio actual").
+    # Ruta absoluta: es una ruta que especifica la ubicación completa del archivo o directorio desde la 
+    # raíz del sistema de archivos. 
+    # (por ejemplo, "/home/usuario/piscine_pedago_data_science/data_science_0_creation_db/ex00/.env").
+    # Almacenamos la ruta absoluta en la variable path y luego comprobamos si es un archivo existente 
+    # con path.is_file(). Si es así, la función retornará esa ruta. Si no se encuentra ningún archivo 
+    # .env en las rutas candidatas, la función devolverá None y continuará el bucle for hasta que se 
+    # agoten las rutas candidatas. 
+    # Si hubiesen más de una ruta candidata, la función devolvería la primera que encuentre y saldría 
+    # del bucle for.
     return None
+    # Si llegamos hasta el return None, significa que no se encontró ningún archivo .env en las rutas 
+    # candidatas. Por lo que se devuelve None para indicar que no se encontró el archivo .env. y la 
+    # función termina su ejecución. 
 
-
-ENV_PATH = find_env_file()
+ENV_PATH = find_env_file()      
+# Almacenamos la ruta del archivo .env en la variable ENV_PATH que nos retorna la función find_env_file().
 if ENV_PATH is not None:
     load_dotenv(ENV_PATH)
+# Si se encontró un archivo .env, se carga en el entorno de ejecución de Python usando la función load_dotenv().
+# is not None es una forma de comprobar si la variable ENV_PATH tiene un valor distinto de None, es decir, 
+#   si se encontró un archivo .env.
+# Si no lo cargamos en el entorno de ejecución, las variables de entorno definidas en el archivo .env 
+# no estarán disponibles para el resto del script y se usarán los valores por defecto o los valores del 
+# entorno del sistema operativo, lo que podría causar errores.
 
 DB_CONFIG = {
     "host": "localhost",
@@ -210,8 +268,14 @@ DB_CONFIG = {
     "user": os.environ.get("POSTGRES_USER", os.environ.get("USER", "")),
     "password": os.environ.get("POSTGRES_PASSWORD", "mysecretpassword"),
 }
+# BG_CONFIG es un diccionario que contiene la configuración de la conexión a la base de datos PostgreSQL.
+# Los valores de dbname, user y password se obtienen de las variables de entorno definidas en el archivo .env
+# o, si no se encuentran, se usan valores por defecto como por ejemplo:
+# dbname = "piscineds", user = el usuario actual del sistema operativo, password = "mysecretpassword". 
 
-# Misma lógica que fusion.sql
+# A continuación usamos la misma lógica que fusion.sql (también comentado en detalle allí). 
+# Se ejecuta desde Python para poder mostrar mensajes de progreso y errores.
+# Almacenamos en la variable FUSION_SQL la consulta SQL que realiza la fusión de las tablas customers e items.
 FUSION_SQL = """
 DROP TABLE IF EXISTS customers_fused;
 
@@ -242,11 +306,15 @@ DROP TABLE customers;
 ALTER TABLE customers_fused RENAME TO customers;
 """
 
-
 def get_connection():
     """Abre conexión a PostgreSQL (puerto 5432 en localhost vía Docker)."""
     return psycopg2.connect(**DB_CONFIG)
-
+# La función get_connection() abre una conexión a la base de datos PostgreSQL usando la configuración
+# almacenada en DB_CONFIG. La función devuelve un objeto de conexión que se puede usar para ejecutar 
+# consultas SQL y manipular datos en la base de datos. 
+# El operador ** se utiliza para desempaquetar el diccionario DB_CONFIG y pasar sus elementos como 
+# argumentos de palabra clave a la función psycopg2.connect(). Esto permite que la función connect() 
+# reciba los parámetros de conexión.
 
 def table_exists(cur, name: str) -> bool:
     cur.execute(
@@ -258,13 +326,57 @@ def table_exists(cur, name: str) -> bool:
         (name,),
     )
     return cur.fetchone() is not None
-
+# La función table_exists() comprueba si una tabla con el nombre especificado existe en la base de datos.
+# La función recibe dos parámetros: cur, que es un objeto cursor que se utiliza para ejecutar consultas SQL, 
+# y name, que es el nombre de la tabla que se quiere comprobar. 
+# Un objeto cursor es un objeto que permite interactuar con la base de datos y ejecutar consultas SQL. cur
+# por tanto es una variable que representa un cursor de la base de datos (psycopg2 cursor) que se utiliza 
+# para ejecutar consultas SQL y recuperar resultados. El término cur es propio de este script y podría llamarse 
+# de otra manera, como por ejemplo "cursor" o "db_cursor". 
+# La función como es boolean devuelve True si la tabla existe y False si no existe. 
+# cur.execute() ejecuta la consulta SQL que busca la tabla en la vista pg_tables de PostgreSQL.
+# WHERE schemaname es una cláusula que filtra las tablas que pertenecen al esquema público de la base de datos
+# y tablename = %s es un marcador de posición que se reemplaza por el nombre de la tabla que se quiere comprobar.
+# (name,) es una tupla que contiene el nombre de la tabla que se quiere comprobar. Una tupla es una 
+# estructura de datos que permite almacenar varios elementos en un solo objeto, similar a una lista, pero 
+# inmutable (no se puede cambiar una vez creada). En este caso, se utiliza una tupla para pasar el nombre de la 
+# tabla como parámetro a la consulta SQL. No usamos el str que hemos recibido como parámetro para evitar 
+# inyecciones SQL (SQL injection), que es un tipo de ataque que consiste en insertar código malicioso en una 
+# consulta SQL para manipular la base de datos. Al usar un marcador de posición (%s) y pasar el nombre de la 
+# tabla como parámetro, psycopg2 se encarga de escapar correctamente el valor y evitar inyecciones SQL.
+# cur.fetchone() devuelve la primera fila del resultado de la consulta SQL. Si la tabla existe, la consulta 
+# devolverá al menos una fila y cur.fetchone() devolverá un objeto que representa esa fila. Si la tabla 
+# no existe, la consulta no devolverá ninguna fila y cur.fetchone() devolverá None. Por eso, la función devuelve 
+# True si cur.fetchone() no es None y False si lo es. 
+# fetchone() es un método del objeto cursor que se utiliza para obtener una fila del resultado de una 
+# consulta SQL.
 
 def count_rows(cur, table: str) -> int:
+    """
+    Cuenta el número de filas de una tabla especificada en la base de datos.
+    """
     cur.execute(f"SELECT COUNT(*) FROM {table};")
     row = cur.fetchone()
     return int(row[0]) if row else 0
-
+# La función recibe dos parámetros: cur, que es un objeto cursor que se utiliza para ejecutar consultas SQL, 
+# y table: str que es el nombre de la tabla de la que se quiere contar el número de filas.
+# table es un parámetro de tipo str (cadena de texto) que representa el nombre de la tabla de la que se 
+# quiere contar el número de filas. El término table es propio de este script y podría llamarse de otra manera, 
+# como por ejemplo "nombre_tabla" o "tabla", y con str estamos indicando que el parámetro debe ser una cadena de texto.
+# La función devuelve un entero que representa el número de filas de la tabla especificada.
+# cur.execute ejecuta la consulta SQL que cuenta el número de filas de la tabla especificada.
+# f"SELECT COUNT(*) FROM {table};" es una cadena de texto formateada (f-string) que permite insertar el valor de la 
+# variable table en la consulta SQL. 
+# cur.fetchone() devuelve la primera fila del resultado de la consulta SQL, que contiene el número de filas de la tabla
+# y se almacena en la variable row (podría llamarse "fila" o "resultado"). 
+# row[0] accede al primer elemento de la fila, que es el número de filas. Si row es None (es decir, si la consulta no 
+# devolvió ninguna fila), la función devuelve 0. 
+# int(row[0]) convierte el valor de row[0] a un entero antes de devolverlo (algo así como un cast en otros lenguajes). 
+# Esto es útil porque el resultado de la consulta SQL puede ser de tipo decimal o string, y queremos asegurarnos de 
+# que la función devuelva un entero.
+# Con el if row else 0 estamos diciendo que si row es None (es decir, si la consulta no devolvió ninguna fila),
+# la función debe devolver 0. Esto es una forma de manejar el caso en el que la tabla no existe o está vacía, evitando 
+# que se produzca un error al intentar acceder a row[0] cuando row es None.
 
 def main() -> None:
     print("EX03 – fusion")

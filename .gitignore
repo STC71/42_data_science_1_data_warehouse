@@ -1,6 +1,9 @@
 *.pdf
 
+__pycache__/
+
 data_2023_feb.csv
+
 
 
 
