@@ -138,6 +138,9 @@ docker ps | grep postgres_piscineds
 cd ruta/a/data_science_1_data_warehouse/ex03
 python3 fusion.py
 ```
+<p align="center">
+  <img src="./imgs/fusion_python_00.png" alt="Module 1 – EX03 – Fusion – Con fusion.py" width="100%">
+</p>
 
 ### Opción B – SQL
 
@@ -214,6 +217,9 @@ SELECT COUNT(*) FILTER (WHERE category_id IS NULL) AS sin_match FROM customers;
 ```sql
 \q
 ```
+<p align="center">
+  <img src="./imgs/fusion_psql_00.png" alt="Module 1 – EX03 – Fusion – Comprobación con psql" width="100%">
+</p>
 
 [↑ Volver al índice](#indice)
 

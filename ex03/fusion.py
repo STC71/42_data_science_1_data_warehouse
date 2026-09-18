@@ -457,8 +457,15 @@ def spinner_while_running(message: str, action, *args, **kwargs):
 def main() -> None:
     # La función main() es la función principal del script que se ejecuta cuando se llama al script desde la 
     # línea de comandos. No recibe parámetros y no devuelve ningún valor (por eso -> None).
-    print("🖇️ EX03 – fusion")      # Imprime el nombre del ejercicio
+    print()
+    print("╔═════════════════════════════════════════════════════════════════════════╗")
+    print("║                              EX03 🖇️ fusion                             ║")
+    print("║             📌 Módulo 1 – Data Science 1 – Data Warehouse               ║")
+    print("║                 sternero 🎓 42 Málaga 🗓️ Octubre 2027                   ║")
+    print("╚═════════════════════════════════════════════════════════════════════════╝")
+    print()
     print("🔗 Objetivo: customers LEFT JOIN items (por product_id), sin perder eventos")
+    print()
     # Imprime el objetivo del ejercicio
     if ENV_PATH:
         print(f"📝 .env: {ENV_PATH}")  # Imprime la ruta del archivo .env si se encontró
