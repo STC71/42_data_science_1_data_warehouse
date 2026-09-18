@@ -52,6 +52,11 @@ import sys
 # funciones del intérprete de Python. Lo necesitamos para salir del programa con
 # sys.exit() en caso de error y para obtener la ruta del ejecutable de Python con
 # sys.executable.
+import threading
+# threading permite ejecutar un hilo en paralelo para mostrar un indicador visual
+# mientras la consulta SQL pesada sigue trabajando en segundo plano.
+import time
+# time es un módulo estándar que permite pausar la animación del spinner.
 from pathlib import Path
 # Path es, un módulo estándar de Pyton, dicho de otro modo, es una clase dentro del 
 # módulo pathlib que proporciona una forma orientada a objetos de trabajar con 
@@ -378,49 +383,175 @@ def count_rows(cur, table: str) -> int:
 # la función debe devolver 0. Esto es una forma de manejar el caso en el que la tabla no existe o está vacía, evitando 
 # que se produzca un error al intentar acceder a row[0] cuando row es None.
 
-def main() -> None:
-    print("EX03 – fusion")
-    print("Objetivo: customers LEFT JOIN items (por product_id), sin perder eventos")
-    if ENV_PATH:
-        print(f".env: {ENV_PATH}")
-    else:
-        print(".env: no encontrado (valores por defecto / entorno)")
-    print()
 
+def spinner_while_running(message: str, action, *args, **kwargs):
+    """Muestra un spinner mientras se ejecuta una operación lenta."""
+    # message es un parámetro de tipo str (cadena de texto) que representa el mensaje que se va a mostrar junto al spinner.
+    # action es un parámetro que representa la función que se va a ejecutar mientras se muestra el spinner.
+    # *args es un parámetro que permite pasar un número variable de argumentos posicionales a la función action. Sirve 
+    # para pasar cualquier número de argumentos a la función action sin tener que especificarlos uno por uno. En nuestro
+    # caso, se utiliza para pasar la consulta SQL FUSION_SQL a la función cur.execute() que se ejecuta en el hilo principal.
+    # El * antes de args indica que se trata de una lista de argumentos posicionales, es decir, que se van a pasar en el 
+    # orden en que se reciben.
+    # **kwargs es un parámetro que permite pasar un número variable de argumentos de palabra clave a la función action.
+    # Sirve para pasar cualquier número de argumentos a la función action sin tener que especificarlos uno por uno. 
+    # En nuestro caso, no se utiliza, pero se incluye para permitir que la función spinner_while_running() sea más 
+    # flexible y pueda aceptar argumentos de palabra clave si se necesitara en el futuro, como por ejemplo timeout=30 
+    # o verbose=True para controlar el comportamiento de la función action. El ** antes de kwargs indica que se trata 
+    # de un diccionario de argumentos de palabra clave, es decir, que se van a pasar como pares clave-valor.
+    stop_event = threading.Event()
+    # stop_event es un objeto de la clase threading.Event que se utiliza para controlar la ejecución del spinner.
+    # threading.Event() es una clase que permite crear un evento que puede ser activado o desactivado desde diferentes hilos
+    # definida en el módulo threading. Un evento es un mecanismo de sincronización que permite a un hilo esperar a que otro 
+    # hilo le indique que puede continuar. En nuestro caso, se utiliza para indicar al hilo del spinner que debe detenerse
+    # cuando la operación lenta haya terminado.
+    frames = ["|", "/", "-", "\\"]
+    # frames es una lista que contiene los caracteres que se van a mostrar en el spinner. Cada carácter representa un
+    # frame de la animación.
+
+    def animate() -> None:
+    # animate es una función interna que se ejecuta en un hilo separado y se encarga de mostrar el spinner en la consola.
+        i = 0
+        while not stop_event.is_set():
+        # El bucle while se ejecuta mientras el evento stop_event no esté activado. Esto permite que el spinner siga
+        # mostrando la animación mientras se ejecuta la operación lenta en el hilo principal.
+            sys.stdout.write(f"\r{frames[i % len(frames)]} {message}")
+            # sys.stdout.write() escribe el mensaje del spinner en la consola. 
+            # El carácter \r mueve el cursor al inicio de la línea, reemplazando el contenido anterior.
+            # El efecto es que el spinner parece girar en el mismo lugar en lugar de imprimir una nueva línea cada vez.
+            sys.stdout.flush()
+            # sys.stdout.flush() fuerza a que el contenido del búfer de salida se escriba en la consola inmediatamente.
+            i += 1
+            # Incrementa el índice del frame para mostrar el siguiente carácter en la animación.
+            time.sleep(0.12)    
+            # Pausa la ejecución del hilo durante 0.12 segundos para controlar la velocidad de la animación del spinner.
+
+    thread = threading.Thread(target=animate, daemon=True)
+    # thread es un objeto de la clase threading.Thread que representa un hilo separado que ejecutará la función animate().
+    # daemon=True indica que el hilo es un hilo daemon, lo que significa que se cerrará automáticamente cuando el hilo 
+    # principal termine, o sea cuando la función spinner_while_running() termine su ejecución por haberse completado la 
+    # operación lenta.
+    thread.start()
+    # Inicia el hilo que ejecuta la función animate() y comienza a mostrar el spinner en la consola.
     try:
+        # El bloque try se utiliza para ejecutar la operación lenta (la función action) y capturar cualquier excepción 
+        # que pueda ocurrir durante su ejecución. Si ocurre una excepción, el bloque finally se ejecutará para detener 
+        # el spinner y limpiar la consola.
+        return action(*args, **kwargs)
+        # retorna el resultado de la función action ejecutada con los argumentos posicionales y de palabra clave 
+        # proporcionados. Esto puede ser útil si la función action devuelve algún valor que se quiera utilizar después 
+        # de que se complete la operación lenta. La función action se ejecuta en el hilo principal, mientras que el 
+        # spinner se ejecuta en un hilo separado.
+    finally:
+        # El bloque finally se ejecuta después de que la función action haya terminado su ejecución, ya sea que haya
+        # completado correctamente o que haya lanzado una excepción. Su propósito es asegurarse de que el spinner se
+        # detenga y la consola se limpie, independientemente de si la operación lenta tuvo éxito o no.
+        stop_event.set()
+        # Establece el evento stop_event, lo que indica al hilo del spinner que debe detenerse. Esto hace que el bucle 
+        # while en la función animate() termine y el hilo del spinner deje de ejecutarse.
+        thread.join()
+        sys.stdout.write("\r" + " " * (len(message) + 6) + "\r")
+        sys.stdout.flush()
+
+
+def main() -> None:
+    # La función main() es la función principal del script que se ejecuta cuando se llama al script desde la 
+    # línea de comandos. No recibe parámetros y no devuelve ningún valor (por eso -> None).
+    print("🖇️ EX03 – fusion")      # Imprime el nombre del ejercicio
+    print("🔗 Objetivo: customers LEFT JOIN items (por product_id), sin perder eventos")
+    # Imprime el objetivo del ejercicio
+    if ENV_PATH:
+        print(f"📝 .env: {ENV_PATH}")  # Imprime la ruta del archivo .env si se encontró
+    else:
+        print("⛓️‍💥 .env: no encontrado (valores por defecto / entorno)")    
+                # Imprime un mensaje si no se encontró el archivo .env
+    print()     # Imprime una línea en blanco para separar la información de la ejecución del script
+
+    # Ejecutamos la fusión de las tablas customers e items dentro de un bloque try-except para manejar posibles errores 
+    # de PostgreSQL. Si todo va bien, se mostrará el número de filas antes y después de la fusión, así como el número de 
+    # filas con y sin match en items. Si ocurre un error, se mostrará un mensaje de error y se saldrá del programa con 
+    # un código de error 1.
+    try:
+        # try es una palabra reservada en Python que se utiliza para manejar excepciones (errores) que puedan ocurrir 
+        # durante la ejecución del código. Desde este punto hasta el bloque except, cualquier error de PostgreSQL que 
+        # ocurra se capturará y se manejará en el bloque except.
         with get_connection() as conn:
+        # Abre la conexión a la base de datos y la cierra automáticamente al salir del bloque. with es una palabra 
+        # reservada en Python que se utiliza generalmente para manejar recursos que necesitan ser abiertos y cerrados, 
+        # como archivos o conexiones a bases de datos en nuestro caso. get_connection() es la función (ver arriba) que 
+        # abre la conexión a la base de datos y devuelve un objeto de conexión que se almacena en la variable que 
+        # llamamos conn (podría llamarse "conexion" o "db_conn").
             with conn.cursor() as cur:
+            # Abre un cursor para ejecutar consultas SQL y lo cierra automáticamente al salir del bloque.
+            # El cursor es como una especie de "puntero" que nos permite recorrer los resultados de una consulta SQL 
+            # y ejecutar varias consultas en la misma conexión. cursor es una palabra reservada en Python que se utiliza 
+            # para crear un cursor a partir de un objeto de conexión, mientras que cur es simplemente una variable que 
+            # representa el cursor y podría llamarse de otra manera, como por ejemplo "cursor" o "db_cursor".
                 if not table_exists(cur, "customers"):
-                    print("ERROR: no existe la tabla customers (haz EX01 y EX02 antes).", file=sys.stderr)
+                    # Si la tabla customers no existe, se muestra un mensaje de error y se sale del programa con un 
+                    # código de error 1. Ver table_exists() arriba.
+                    print("🚫 ERROR: no existe la tabla customers (haz EX01 y EX02 antes).", file=sys.stderr)
+                    # file=sys.stderr indica que el mensaje de error se enviará a la salida de error estándar (stderr) 
+                    # en lugar de la salida estándar (stdout). Esto es útil para separar los mensajes de error de los 
+                    # mensajes normales del programa. O sea, con stderr nos aseguramos de que el mensaje de error se 
+                    # muestre en la consola aunque la salida estándar esté redirigida a un archivo o a otro programa
+                    # mientras que si usásemos stdout, el mensaje de error podría perderse si la salida estándar está 
+                    # redirigida (por ejemplo, a un archivo de log).
                     sys.exit(1)
                 if not table_exists(cur, "items"):
-                    print("ERROR: no existe la tabla items (Module 0 – EX04).", file=sys.stderr)
+                    # Si la tabla items no existe, se muestra un mensaje de error y se sale del programa con un 
+                    # código de error 1. Ver table_exists() arriba.
+                    print("🚫 ERROR: no existe la tabla items (Module 0 – EX04).", file=sys.stderr)
                     sys.exit(1)
 
                 n_cust = count_rows(cur, "customers")
+                # Guardamos en n_cust el número de filas de la tabla customers antes de la fusión. Ver count_rows() arriba.
                 n_items = count_rows(cur, "items")
-                print(f"COUNT(*) customers (antes): {n_cust}")
-                print(f"COUNT(*) items:             {n_items}")
+                # Guardamos en n_items el número de filas de la tabla items antes de la fusión. Ver count_rows() arriba.
+                print(f"📎 COUNT(*) customers (antes): {n_cust}")
+                # Mostramos un mensaje con el número de filas de la tabla customers antes de la fusión.
+                print(f"📎 COUNT(*) items (antes):     {n_items}")
+                # Mostramos un mensaje con el número de filas de la tabla items antes de la fusión.
                 print()
-                print("Fusionando (LEFT JOIN + DISTINCT ON product_id en items)...")
-                print("Puede tardar varios minutos. Espera, por favor.")
+                print("🕒 Fusionando (LEFT JOIN + DISTINCT ON product_id en items)...")
+                print("Puede tardar varios minutos. Paciencia, por favor. ⏳")
 
-                cur.execute(FUSION_SQL)
+                spinner_while_running(
+                    "Procesando fusión...",
+                    cur.execute,
+                    FUSION_SQL,
+                )
+                # El spinner hace visible que el script sigue vivo mientras PostgreSQL ejecuta 
+                # la operación larga. cur.execute(FUSION_SQL) sigue siendo la misma operación 
+                # de fusión; solo añadimos feedback visual durante la espera.
                 conn.commit()
+                # Confirma los cambios en la base de datos. Esto es importante porque si no se hace, los cambios 
+                # realizados por la consulta SQL no se guardarán en la base de datos y se perderán al cerrar la conexión. 
+                # commit() es un método del objeto de conexión que se utiliza para confirmar los cambios realizados en 
+                # la base de datos desde la última vez que se hizo un commit o rollback.
 
                 n_after = count_rows(cur, "customers")
-                print(f"COUNT(*) customers (después): {n_after}")
+                # Guardamos en n_after el número de filas de la tabla customers después de la fusión. 
+                # Ver count_rows() arriba.
+                print(f"🖇️ COUNT(*) customers (después): {n_after}")
 
                 if n_after != n_cust:
+                # Si el número de filas de la tabla customers después de la fusión es distinto al número de filas 
+                # antes de la fusión, se muestra un mensaje de advertencia indicando que se perdió información y 
+                # se sugiere revisar si la tabla items tenía product_id duplicados no controlados.
                     print(
-                        "AVISO: el número de filas de customers cambió; "
-                        "revisa si items tenía product_id duplicados no controlados.",
+                        "🔊 AVISO: el número de filas de customers cambió; "
+                        "🔎 revisa si items tenía product_id duplicados no controlados.",
                         file=sys.stderr,
                     )
                 else:
-                    print("OK: mismo número de eventos que antes (no se perdió información).")
+                    print("OK: mismo número de eventos que antes (no se perdió información). ✅")
 
                 cur.execute(
+                    # La consulta SQL que se ejecuta a continuación cuenta el número de filas de la tabla customers 
+                    # que tienen category_id NULL (sin match en items) y el número de filas que tienen category_id 
+                    # no NULL (con match en items). Esto nos permite verificar que la fusión se realizó correctamente 
+                    # y que no se perdió información.
                     """
                     SELECT COUNT(*) FILTER (WHERE category_id IS NULL) AS sin_categoria,
                            COUNT(*) FILTER (WHERE category_id IS NOT NULL) AS con_categoria
@@ -428,18 +559,32 @@ def main() -> None:
                     """
                 )
                 sin_cat, con_cat = cur.fetchone()
-                print(f"Filas con datos de items:    {con_cat}")
-                print(f"Filas sin match en items:    {sin_cat}")
+                # sin_cat y con_cat son variables que almacenan el número de filas de la tabla customers que tienen
+                # category_id NULL (sin match en items) y el número de filas que tienen category_id no NULL (con match 
+                # en items), respectivamente. 
+                # cur.fetchone() devuelve la primera fila del resultado de la consulta SQL, que contiene los dos valores 
+                # que necesitamos. 
+                # La función fetchone() devuelve una tupla con los valores de las columnas de la fila, que se desempaquetan 
+                # en las variables sin_cat y con_cat.
+                # Esto nos permite verificar que la fusión se realizó correctamente y que no se perdió información.
+                print(f"🔗 Filas con datos de items:    {con_cat}")    
+                # Mostramos un mensaje con el número de filas de la tabla customers que tienen match en items.
+                print(f"⛓️‍💥 Filas sin match en items:    {sin_cat}")
+                # Mostramos un mensaje con el número de filas de la tabla customers que no tienen match en items.
                 print()
-                print("Proceso terminado.")
+                print("Proceso terminado. ✅")
     except psycopg2.Error as exc:
-        print("Error de PostgreSQL:", exc, file=sys.stderr)
-        print(
-            "Revisa: docker ps, .env, tablas customers e items.",
-            file=sys.stderr,
-        )
+    # El bloque except captura cualquier error de PostgreSQL que ocurra durante la ejecución del código dentro del 
+    # bloque try. exec es una variable que representa el error capturado mediante la clase psycopg2.Error, que es la clase 
+    # base para todos los errores de PostgreSQL en psycopg2.
+        print("❌ Error de PostgreSQL:", exc, file=sys.stderr)
+        print("🔎 Revisa: docker ps, .env, tablas customers e items.", file=sys.stderr)
         sys.exit(1)
 
 
 if __name__ == "__main__":
+    # El bloque if __name__ == "__main__": es una convención en Python que indica que el código dentro
+    #  de este bloque solo se ejecutará si el script se ejecuta directamente desde la línea de comandos,
+    # y no si se importa como un módulo en otro script. Esto permite que el script pueda ser reutilizado 
+    # como un módulo sin ejecutar automáticamente la función main().
     main()

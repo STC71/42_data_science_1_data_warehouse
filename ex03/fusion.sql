@@ -1,6 +1,6 @@
 -- =============================================================================
 -- EX03 – fusion.sql
--- Module 1 – Data Warehouse – Piscine Data Science
+-- Module 1 – Data Warehouse – Piscine Data Science – sternero – 42 Málaga
 --
 -- Qué pide el subject:
 --   Fusionar la tabla "customers" con la tabla "items".
