@@ -301,6 +301,13 @@ SELECT COUNT(*) FROM customers;
 SELECT * FROM customers WHERE brand IS NOT NULL LIMIT 5;
 \q
 ```
+<p align="center">
+  <img src="./ex03/imgs/fusion_psql_00.png" alt="Piscine Data Science – Module 1 – Data Warehouse – psql" width="100%">
+</p>
+
+<p align="center">
+  <img src="./ex03/imgs/img_pgAdmin_12.png" alt="Piscine Data Science – Module 1 – Data Warehouse – pgAdmin" width="100%">
+</p>
 
 [↑ Volver al índice](#indice)
 
