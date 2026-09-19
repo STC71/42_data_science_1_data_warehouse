@@ -221,6 +221,10 @@ SELECT COUNT(*) FILTER (WHERE category_id IS NULL) AS sin_match FROM customers;
   <img src="./imgs/fusion_psql_00.png" alt="Module 1 – EX03 – Fusion – Comprobación con psql" width="100%">
 </p>
 
+<p align="center">
+  <img src="./imgs/img_pgAdmin_12.png" alt="Module 1 – EX03 – Fusion – Comprobación con pgAdmin" width="100%">
+</p>
+
 [↑ Volver al índice](#indice)
 
 ---

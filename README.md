@@ -59,8 +59,8 @@ Al final, `customers` concentra el historial de eventos **más** categoría/marc
             \       /                  |
              v     v                   v
           EXTRACT ────────► TRANSFORM ────────► LOAD
-                     (UNION, DELETE,          tabla
-                      LEFT JOIN)            customers
+                     (UNION, DELETE,            tabla
+                        LEFT JOIN)            customers
 ```
 
 - **Extract**: leer tablas mensuales y catálogo ya cargados en PostgreSQL.  
@@ -194,7 +194,7 @@ docker-compose up -d
 
 ### Asistentes de este módulo
 
-En cada `ex0X/` (y en EX00):
+En cada `ex0X/`:
 
 ```bash
 chmod +x start.sh
@@ -271,5 +271,5 @@ O con la GUI de **EX00** (pgAdmin u otra): conectar a `localhost:5432` / `piscin
 
 <p align="center">
   <em>Piscine Data Science – Module 1 – Data Warehouse</em><br>
-  <strong>sternero – 42 Málaga – 2026</strong>
+  <strong>sternero – 42 Málaga – Octubre 2026</strong>
 </p>

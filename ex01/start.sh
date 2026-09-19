@@ -14,14 +14,14 @@
 
 set -u
 
-RESET='\033[0m'
-BOLD='\033[1m'
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-CYAN='\033[0;36m'
-MAGENTA='\033[0;35m'
-WHITE='\033[1;37m'
+RESET=$'\033[0m'
+BOLD=$'\033[1m'
+RED=$'\033[0;31m'
+GREEN=$'\033[0;32m'
+YELLOW=$'\033[1;33m'
+CYAN=$'\033[0;36m'
+MAGENTA=$'\033[0;35m'
+WHITE=$'\033[1;37m'
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 MODULE1_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
@@ -281,13 +281,14 @@ start_pgadmin()
 
     local attempt
     for attempt in 1 2 3 4 5 6 7 8 9 10; do
-        sleep 1
-        if check_pgadmin >/dev/null 2>&1; then
-            ok "pgAdmin arrancado → http://127.0.0.1:5050"
-            return 0
-        fi
         printf '\r\033[K%s→ Esperando a pgAdmin... (%d/10 s)%s' \
             "$CYAN" "$attempt" "$RESET"
+        sleep 1
+        if check_pgadmin >/dev/null 2>&1; then
+            printf '\r\033[K%s✓ pgAdmin arrancado → http://127.0.0.1:5050%s\n' \
+                "$GREEN" "$RESET"
+            return 0
+        fi
     done
     echo
     warn "pgAdmin aún no responde; revisa /tmp/pgadmin4_m1_ex01.log"
