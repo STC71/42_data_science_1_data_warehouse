@@ -1,68 +1,114 @@
 # 🐍 Guía Python – EX02 Remove duplicates
 
 <p align="center">
-  <img src="./imgs/python_01.jpg" alt="Module 1 – EX02 – Remove duplicates – python.md" width="100%">
+  <img src="./imgs/python_01.jpg" alt="Module 1 – EX02 – Remove duplicates – Guía Python" width="100%">
 </p>
 
-[← README ex02](./README.md)
+[← README EX02](./README.md) · [← sql.md](./sql.md) · [← Module 1](../README.md)
 
 ---
 
 <a id="indice"></a>
 ## 📑 Índice
 
-1. [Para quién es esta guía](#para-quien)
-2. [Qué hace el script](#que-hace)
-3. [Estructura del archivo](#estructura)
-4. [Dependencias y `.env`](#deps)
-5. [La consulta DELETE en Python](#delete)
-6. [Conteos before / after](#conteos)
-7. [Cómo ejecutarlo](#ejecutar)
-8. [Errores habituales](#errores)
-9. [Relación con el `.sql`](#sql)
-10. [Glosario](#glosario)
+### Parte A – Python básico para este script
+1. [¿Para quién es esta guía?](#para-quien)
+2. [Script, variables, funciones, import](#basico)
+3. [`try` / `with` / f-strings](#try-with)
+4. [¿Por qué el trabajo pesado va en SQL?](#por-que-sql)
+
+### Parte B – `remove_duplicates.py`
+5. [Objetivo del subject](#subject)
+6. [Diagrama de flujo](#diagrama)
+7. [Estructura del archivo](#estructura)
+8. [Dependencias y `.env`](#deps)
+9. [La cadena `DELETE_SQL`](#delete-sql)
+10. [`main()`: before → DELETE → after](#main)
+11. [Cómo ejecutarlo](#ejecutar)
+12. [Errores habituales](#errores)
+13. [Glosario](#glosario)
 
 ---
 
 <a id="para-quien"></a>
-## 👋 Para quién es esta guía
+## 👋 ¿Para quién es esta guía?
 
-Para quien prefiere lanzar la limpieza de `customers` con:
-
-```bash
-python3 remove_duplicates.py
-```
-O mediante:
-```bash
-chmod +x remove_duplicates.py; ./remove_duplicates.py
-```
-
-y quiere entender el código **sin** asumir experiencia previa en Python.
-
-La lógica de negocio es la misma que en [`remove_duplicates.sql`](./remove_duplicates.sql); Python solo **conecta**, **ejecuta** y **muestra** los conteos.
-
-<p align="center">
-  <img src="./imgs/diagrama_py.png" alt="Module 1 – EX02 – Remove duplicates – Diagrama de flujo" width="100%">
-</p>
+Para ejecutar y entender `remove_duplicates.py` sin ser experto en Python.  
+La regla del subject (duplicados + 1 segundo) está explicada en detalle en [sql.md](./sql.md).
 
 [↑ Volver al índice](#indice)
 
 ---
 
-<a id="que-hace"></a>
-## 🎯 Qué hace el script
+<a id="basico"></a>
+## 🧱 Script, variables, funciones, import
 
-```text
-1. (Si hace falta) instalar psycopg2 y python-dotenv
-2. Leer usuario / contraseña / BD desde Module 0 ex00/.env
-3. Conectar a localhost:5432 → piscineds
-4. COUNT(*)  →  "before"
-5. Ejecutar el DELETE con LAG (≤ 1 segundo)
-6. COUNT(*)  →  "after"
-7. Mostrar cuántas filas se fueron
+- **Script**: archivo `.py` con pasos en orden.
+- **Variable**: caja con nombre (`before = 20692840`).
+- **Función** (`def`): bloque reutilizable.
+- **`import`**: trae módulos (`psycopg2`, `Path`, …).
+
+```bash
+python3 remove_duplicates.py
 ```
 
-Analogía: el script es el **mando a distancia**; el trabajo pesado lo hace PostgreSQL dentro del contenedor.
+[↑ Volver al índice](#indice)
+
+---
+
+<a id="try-with"></a>
+## 🛡️ `try` / `with` / f-strings
+
+```python
+try:
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            ...
+except psycopg2.Error as exc:
+    print("Error:", exc)
+```
+
+- `with` cierra conexión/cursor al salir.
+- `try`/`except` muestra errores de PostgreSQL sin trazar un fallo críptico.
+- `f"... {variable}"` inserta valores en el texto.
+
+[↑ Volver al índice](#indice)
+
+---
+
+<a id="por-que-sql"></a>
+## ⚙️ ¿Por qué el trabajo pesado va en SQL?
+
+Borrar ~1,5 M de filas entre 20 M **en un bucle Python** sería lentísimo.  
+El script envía **un solo DELETE** al servidor; PostgreSQL usa la ventana `LAG` de forma optimizada.
+
+[↑ Volver al índice](#indice)
+
+---
+
+<a id="subject"></a>
+## 🎯 Objetivo del subject
+
+Eliminar en **`customers`**:
+
+1. filas duplicadas;
+2. la misma instrucción repetida con **≤ 1 segundo** de diferencia.
+
+[↑ Volver al índice](#indice)
+
+---
+
+<a id="diagrama"></a>
+## 🗺️ Diagrama de flujo
+
+<p align="center">
+  <img src="./imgs/diagrama_py.png" alt="Module 1 – EX02 – Diagrama remove_duplicates.py" width="100%">
+</p>
+
+```text
+Inicio → deps → .env → conectar
+  → COUNT antes → DELETE (LAG) → COUNT después → fin
+```
 
 [↑ Volver al índice](#indice)
 
@@ -73,14 +119,13 @@ Analogía: el script es el **mando a distancia**; el trabajo pesado lo hace Post
 
 | Bloque | Rol |
 |--------|-----|
-| Cabecera / docstring | Objetivo del subject y uso |
-| `ensure_dependencies()` | `pip install --user` si faltan librerías |
-| Rutas + `find_env_file()` | Encontrar `.env` sin path de un solo login |
-| `DB_CONFIG` | host, port, dbname, user, password |
-| `DELETE_SQL` | Misma sentencia que el `.sql` |
-| `get_connection()` | `psycopg2.connect` |
-| `count_customers()` | `SELECT COUNT(*)` |
-| `main()` | Orquesta before → DELETE → after |
+| Docstring | Subject, pasos, analogía, uso |
+| `ensure_dependencies` | pip --user si falta psycopg2/dotenv |
+| `find_env_file` | Localizar Module 0 `.env` |
+| `DB_CONFIG` | Conexión localhost:5432 |
+| `DELETE_SQL` | Misma lógica que el `.sql` |
+| `count_customers` | `SELECT COUNT(*)` |
+| `main` | Orquestación y mensajes |
 
 [↑ Volver al índice](#indice)
 
@@ -89,61 +134,41 @@ Analogía: el script es el **mando a distancia**; el trabajo pesado lo hace Post
 <a id="deps"></a>
 ## 📦 Dependencias y `.env`
 
-```python
-# Ideas clave
-psycopg2   → driver para hablar con PostgreSQL
-dotenv     → cargar POSTGRES_* desde un archivo .env
-```
+- **psycopg2**: hablar con PostgreSQL  
+- **python-dotenv**: leer `POSTGRES_*` sin hardcodear secretos  
 
-El script busca, entre otras:
-
-```text
-../data_science_0_creation_db/ex00/.env
-```
-
-Si no hay `.env`, usa variables de entorno o valores por defecto del subject (`piscineds`, `mysecretpassword`, usuario del sistema).
+Si no hay `.env`, se usan valores por defecto del subject (`piscineds`, `mysecretpassword`, usuario del sistema).
 
 [↑ Volver al índice](#indice)
 
 ---
 
-<a id="delete"></a>
-## 🗑️ La consulta DELETE en Python
+<a id="delete-sql"></a>
+## 📜 La cadena `DELETE_SQL`
 
-No reescribimos la lógica en bucles Python (sería lentísimo con 20 M filas).
-
-Enviamos **un solo SQL** al servidor:
-
-```python
-cur.execute(DELETE_SQL)
-```
-
-Ese texto es el mismo `DELETE ... LAG ... INTERVAL '1 second'` explicado en [sql.md](./sql.md).
-
-Ventaja: un solo sitio mental para la regla del subject; el `.py` aporta comodidad y conteos.
+String con el `DELETE ... LAG ... INTERVAL '1 second'` descrito en [sql.md](./sql.md).  
+`cur.execute(DELETE_SQL)` lo envía al servidor de una vez.
 
 [↑ Volver al índice](#indice)
 
 ---
 
-<a id="conteos"></a>
-## 🔢 Conteos before / after
+<a id="main"></a>
+## 🎬 `main()`: before → DELETE → after
 
-```python
-before = count_customers(cur)
-cur.execute(DELETE_SQL)
-after = count_customers(cur)
-conn.commit()
-```
+1. Mostrar regla y ruta `.env`.  
+2. `COUNT(*)` **antes**.  
+3. Ejecutar DELETE (puede tardar minutos).  
+4. `COUNT(*)` **después**.  
+5. `commit()` para persistir.  
+6. Mostrar filas eliminadas.
 
-- **`commit()`** confirma los borrados de forma definitiva.  
-- Sin `commit`, en muchos modos los cambios no quedan guardados.
-
-En pantalla verás algo similar a:
+Ejemplo real de campus:
 
 ```text
-COUNT(*) before: 20692840
-COUNT(*) after:  19xxxxxx
+COUNT(*) antes:  20692840
+COUNT(*) después: 19175899
+Filas borradas: 1516941
 ```
 
 [↑ Volver al índice](#indice)
@@ -154,18 +179,11 @@ COUNT(*) after:  19xxxxxx
 ## ▶️ Cómo ejecutarlo
 
 ```bash
-cd ruta/a/data_science_1_data_warehouse/ex02
-
-# Contenedor arriba
-docker ps | grep postgres_piscineds
-
+cd ruta/a/ex02
 python3 remove_duplicates.py
 # o
-chmod +x remove_duplicates.py
-./remove_duplicates.py
+./start.sh   # opción ejecutar .py
 ```
-
-También desde [`start.sh`](./start.sh) → opción **Ejecutar remove_duplicates.py**.
 
 [↑ Volver al índice](#indice)
 
@@ -174,27 +192,11 @@ También desde [`start.sh`](./start.sh) → opción **Ejecutar remove_duplicates
 <a id="errores"></a>
 ## 🛠️ Errores habituales
 
-| Mensaje / síntoma | Causa probable | Qué hacer |
-|-------------------|----------------|-----------|
-| `ModuleNotFoundError: psycopg2` | Paquete no instalado | El script intenta instalar; o `pip install --user psycopg2-binary` |
-| `connection refused` | Docker parado | `docker-compose up -d` en Module 0 |
-| `relation "customers" does not exist` | Falta EX01 | Crear `customers` antes |
-| Pylance “import could not be resolved” | Aviso del editor | No impide ejecutar en terminal si el paquete está instalado |
-| Muy lento | Tabla enorme | Esperar; es trabajo en el servidor SQL |
-
-[↑ Volver al índice](#indice)
-
----
-
-<a id="sql"></a>
-## 🔗 Relación con el `.sql`
-
-| Entrega | Cuándo usarla |
-|---------|----------------|
-| `remove_duplicates.sql` | Evaluación clásica con `psql -f` |
-| `remove_duplicates.py` | Misma regla + mensajes before/after |
-
-Ambas son válidas como `remove_duplicates.*` según el subject.
+| Síntoma | Qué hacer |
+|---------|-----------|
+| No existe `customers` | EX01 primero |
+| `connection refused` | Docker Module 0 |
+| `ModuleNotFoundError` | `pip install --user psycopg2-binary python-dotenv` |
 
 [↑ Volver al índice](#indice)
 
@@ -205,13 +207,13 @@ Ambas son válidas como `remove_duplicates.*` según el subject.
 
 | Término | Significado |
 |---------|-------------|
-| `psycopg2` | Librería Python ↔ PostgreSQL |
-| `cursor` | Canal para enviar SQL y leer resultados |
-| `commit` | Confirmar la transacción |
-| `rowcount` | Filas afectadas por el último comando (si el driver lo informa) |
+| Driver | Librería de conexión a la BD |
+| `commit` | Confirmar cambios |
+| `rowcount` | Filas afectadas (si el driver lo informa) |
+| f-string | Texto con `{variables}` |
 
 [↑ Volver al índice](#indice)
 
 ---
 
-*Module 1 – EX02 – Guía Python – sternero – 42 Málaga – Octubre 2026*
+*Module 1 – EX02 – Guía Python – sternero – 42 Málaga – 2026*

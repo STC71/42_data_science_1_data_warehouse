@@ -1,71 +1,179 @@
 # 📘 Guía SQL – EX02 Remove duplicates
 
 <p align="center">
-  <img src="./imgs/sql_01.jpg" alt="Module 1 – EX02 – Remove duplicates – sql.md" width="100%">
+  <img src="./imgs/sql_01.jpg" alt="Module 1 – EX02 – Remove duplicates – Guía SQL" width="100%">
 </p>
 
-[← README ex02](./README.md)
+[← README EX02](./README.md) · [← Module 1](../README.md) · [python.md →](./python.md)
 
 ---
 
 <a id="indice"></a>
 ## 📑 Índice
 
-1. [Para quién es esta guía](#para-quien)
-2. [Objetivo del subject en SQL](#objetivo)
-3. [Repaso: qué es un DELETE](#delete)
-4. [Duplicado exacto vs eco a 1 segundo](#dup)
-5. [Ventanas: PARTITION BY, ORDER BY, LAG](#ventanas)
-6. [Qué es `ctid`](#ctid)
-7. [El DELETE completo, frase a frase](#completo)
-8. [Por qué no usamos solo DISTINCT](#distinct)
-9. [Cómo ejecutarlo](#ejecutar)
-10. [Comprobar](#comprobar)
-11. [Glosario](#glosario)
+### Parte A – SQL básico aplicado a este ejercicio
+1. [¿Para quién es esta guía?](#para-quien)
+2. [Qué es SQL (recordatorio breve)](#sql)
+3. [DELETE: borrar filas (no la tabla)](#delete)
+4. [WHERE: “solo estas filas”](#where)
+5. [Funciones de ventana (idea)](#ventana)
+6. [PARTITION BY y ORDER BY](#partition)
+7. [LAG: mirar la fila de arriba](#lag)
+8. [INTERVAL: hablar de tiempo](#interval)
+9. [ctid: el “número de estantería” interno](#ctid)
+
+### Parte B – El subject y `remove_duplicates.sql`
+10. [Qué pide el subject](#subject)
+11. [Duplicado exacto vs eco a 1 segundo](#dup)
+12. [Claves de negocio de una “instrucción”](#claves)
+13. [El DELETE completo, frase a frase](#completo)
+14. [Por qué no basta DISTINCT](#distinct)
+15. [Cómo ejecutarlo](#ejecutar)
+16. [Comprobar](#comprobar)
+17. [Errores frecuentes](#errores)
+18. [Glosario](#glosario)
 
 ---
 
 <a id="para-quien"></a>
-## 👋 Para quién es esta guía
+## 👋 ¿Para quién es esta guía?
 
-Para quien ya tiene la tabla **`customers`** (EX01) y debe **borrar filas de más** sin haber trabajado antes con funciones de ventana.
-
-No hace falta ser experto en SQL: vamos con analogías y el mismo espíritu que `SQL.md` del Module 0.
+Para quien debe limpiar **`customers`** (EX02) y aún no domina ventanas SQL (`LAG`, `PARTITION BY`).  
+Partimos de cero en los conceptos que usa el script y luego lo leemos línea a línea.
 
 [↑ Volver al índice](#indice)
 
 ---
 
-<a id="objetivo"></a>
-## 🎯 Objetivo del subject en SQL
+<a id="sql"></a>
+## 🗣️ Qué es SQL (recordatorio breve)
 
-El PDF pide:
-
-1. Eliminar filas **duplicadas** en `customers`.  
-2. Eliminar también el caso en que el servidor envía **la misma instrucción** con hasta **1 segundo** de diferencia.
-
-Traducción a reglas técnicas:
-
-- Misma “instrucción de negocio” ≈ mismos `user_id`, `user_session`, `event_type`, `product_id`, `price`.  
-- Si dos eventos así están a **0 o ≤ 1 s** de distancia en el tiempo → nos quedamos con **uno**.
+SQL es el idioma del archivero (PostgreSQL).  
+Pedimos datos (`SELECT`), creamos estructuras (`CREATE`), borramos filas (`DELETE`), etc.
 
 [↑ Volver al índice](#indice)
 
 ---
 
 <a id="delete"></a>
-## 🗑️ Repaso: qué es un DELETE
+## 🗑️ DELETE: borrar filas (no la tabla)
 
 ```sql
-DELETE FROM nombre_tabla
-WHERE condicion;
+DELETE FROM customers
+WHERE ...condicion...;
 ```
 
-- **Borra filas** que cumplen la condición.  
-- **No** borra la tabla entera (eso sería `DROP TABLE`).  
-- Sin `WHERE`, borraría **todas** las filas (peligroso; aquí no lo hacemos).
+Analogía: quitas **carteles repetidos** del tablón; el tablón (`customers`) sigue existiendo.
 
-Analogía: quitar carteles repetidos de un tablón, no tirar el tablón.
+- `DELETE` ≠ `DROP TABLE` (DROP tira tablón y carteles).
+- Sin `WHERE`, borrarías **todas** las filas (aquí no lo hacemos).
+
+[↑ Volver al índice](#indice)
+
+---
+
+<a id="where"></a>
+## 🎯 WHERE: “solo estas filas”
+
+Filtra qué filas se ven o se borran.
+
+```sql
+WHERE prev_time IS NOT NULL
+  AND event_time - prev_time <= INTERVAL '1 second'
+```
+
+Solo las filas que cumplen **las dos** condiciones.
+
+[↑ Volver al índice](#indice)
+
+---
+
+<a id="ventana"></a>
+## 🪟 Funciones de ventana (idea)
+
+Una función de ventana calcula algo **mirando un grupo de filas relacionadas**, sin colapsar el resultado en una sola fila por grupo (eso sería `GROUP BY`).
+
+Analogía: en una cola del supermercado, cada persona puede preguntar “¿a qué hora llegó el de delante?” sin que la cola deje de ser una lista de personas.
+
+[↑ Volver al índice](#indice)
+
+---
+
+<a id="partition"></a>
+## 📚 PARTITION BY y ORDER BY
+
+```sql
+OVER (
+  PARTITION BY user_id, user_session, event_type, product_id, price
+  ORDER BY event_time, ctid
+)
+```
+
+- **PARTITION BY**: “dentro de cada grupo de misma instrucción de negocio…”
+- **ORDER BY**: “…ordenados en el tiempo (y ctid si empatan)”
+
+Cada partición es como una **cinta temporal** de un mismo usuario/sesión/acción/producto/precio.
+
+[↑ Volver al índice](#indice)
+
+---
+
+<a id="lag"></a>
+## ⬅️ LAG: mirar la fila de arriba
+
+```sql
+LAG(event_time) OVER (...) AS prev_time
+```
+
+Devuelve el `event_time` de la **fila anterior** en la misma partición.
+
+- La **primera** fila del grupo no tiene anterior → `prev_time` es NULL → **no se borra**.
+- Si la actual llegó 0 s o ≤ 1 s después de la anterior → es un eco → **candidata a borrado**.
+
+[↑ Volver al índice](#indice)
+
+---
+
+<a id="interval"></a>
+## ⏱️ INTERVAL: hablar de tiempo
+
+```sql
+INTERVAL '1 second'
+```
+
+Es la forma SQL de decir “una duración de un segundo”.  
+Restar dos timestamps da un intervalo; lo comparamos con ese límite del subject.
+
+[↑ Volver al índice](#indice)
+
+---
+
+<a id="ctid"></a>
+## 🏷️ ctid: el “número de estantería” interno
+
+`ctid` identifica físicamente una versión de fila dentro de PostgreSQL.
+
+- No es columna de negocio (no lo uses en el modelo final).
+- Sirve para decir: “borra **esta** fila concreta”.
+- En el `ORDER BY` desempata cuando dos eventos tienen el mismo `event_time`.
+
+[↑ Volver al índice](#indice)
+
+---
+
+<a id="subject"></a>
+## 🎯 Qué pide el subject
+
+> Delete the duplicate rows in the "customers" table.  
+> Sometimes the server sends the same instruction with **1 second** interval, so you must also remove them.
+
+Ejemplo del PDF:
+
+```text
+2022-10-01 00:00:32  remove_from_cart  5779403
+2022-10-01 00:00:33  remove_from_cart  5779403
+→ una sola fila final
+```
 
 [↑ Volver al índice](#indice)
 
@@ -74,57 +182,29 @@ Analogía: quitar carteles repetidos de un tablón, no tirar el tablón.
 <a id="dup"></a>
 ## 🔁 Duplicado exacto vs eco a 1 segundo
 
-| Tipo | Ejemplo | Tratamiento |
-|------|---------|-------------|
-| Exacto | Dos filas **idénticas** (mismo tiempo y mismos campos) | Borrar una |
-| Eco (subject) | Misma acción / producto / usuario, tiempos `00:00:32` y `00:00:33` | Borrar la posterior |
+| Tipo | Tiempo | Tratamiento con LAG ≤ 1 s |
+|------|--------|---------------------------|
+| Exacto | Igual (0 s) | Se borra la posterior |
+| Eco (subject) | 1 segundo después | Se borra la posterior |
 
-Una sola estrategia con **`LAG`** cubre **ambos**: si el tiempo anterior está a ≤ 1 s (incluido 0), la fila actual es redundante.
-
-[↑ Volver al índice](#indice)
-
----
-
-<a id="ventanas"></a>
-## 🪟 Ventanas: PARTITION BY, ORDER BY, LAG
-
-Imagina que ordenas todos los eventos de un mismo cliente/sesión/acción/producto en una fila temporal.
-
-```text
-tiempo:  10:00:00   10:00:00   10:00:01   10:05:00
-         (primera)  (eco 0s)   (eco 1s)   (otra acción, se conserva)
-```
-
-- **`PARTITION BY a, b, c...`**  
-  Divide el trabajo en grupos independientes (una “cinta” por instrucción de negocio).
-
-- **`ORDER BY event_time, ctid`**  
-  Orden cronológico; `ctid` desempata si el tiempo es igual.
-
-- **`LAG(event_time)`**  
-  Mira el **reloj de la fila de arriba** (la anterior en ese grupo).
-
-```sql
-LAG(event_time) OVER (
-    PARTITION BY user_id, user_session, event_type, product_id, price
-    ORDER BY event_time, ctid
-) AS prev_time
-```
-
-Si `prev_time` no es NULL y `event_time - prev_time <= interval '1 second'`, esta fila es un eco.
+Una sola regla cubre ambos.
 
 [↑ Volver al índice](#indice)
 
 ---
 
-<a id="ctid"></a>
-## 🏷️ Qué es `ctid`
+<a id="claves"></a>
+## 🔑 Claves de negocio de una “instrucción”
 
-En PostgreSQL, cada fila tiene un identificador físico interno llamado **`ctid`**.
+Consideramos la misma instrucción cuando coinciden:
 
-- Sirve para decir: “borra **esta** fila concreta”.  
-- **No** es una columna de negocio; no la uses en el modelo final.  
-- Cambia si la fila se reescribe; por eso solo lo usamos en la limpieza puntual.
+| Campo | Por qué |
+|-------|---------|
+| `user_id` | Mismo cliente |
+| `user_session` | Misma visita |
+| `event_type` | Misma acción |
+| `product_id` | Mismo producto (como en el ejemplo) |
+| `price` | Mismo precio en ese contexto |
 
 [↑ Volver al índice](#indice)
 
@@ -143,14 +223,8 @@ USING (
             event_time,
             LAG(event_time) OVER (
                 PARTITION BY
-                    user_id,
-                    user_session,
-                    event_type,
-                    product_id,
-                    price
-                ORDER BY
-                    event_time,
-                    ctid
+                    user_id, user_session, event_type, product_id, price
+                ORDER BY event_time, ctid
             ) AS prev_time
         FROM customers
     ) AS s
@@ -162,23 +236,20 @@ WHERE c.ctid = d.rid;
 
 | Parte | Significado |
 |-------|-------------|
-| Subconsulta interna | Calcula `prev_time` para cada fila |
-| `WHERE ... <= INTERVAL '1 second'` | Marca ecos (0 s o 1 s) |
-| `DELETE ... USING ...` | Borra de `customers` las filas cuyo `ctid` está en esa lista |
-| Primera fila de cada grupo | Tiene `prev_time` NULL → **no** se borra |
+| Subconsulta interna | Calcula `prev_time` por fila |
+| `WHERE ... <= 1 second` | Marca ecos |
+| `DELETE ... USING` | Borra de `customers` los `ctid` marcados |
+| Primera de cada grupo | `prev_time` NULL → se conserva |
 
 [↑ Volver al índice](#indice)
 
 ---
 
 <a id="distinct"></a>
-## ❓ Por qué no usamos solo DISTINCT
+## ❓ Por qué no basta DISTINCT
 
-`SELECT DISTINCT *` o `UNION` (sin `ALL`) quitan filas **totalmente idénticas**.
-
-El subject exige también el caso **1 segundo después** con la misma instrucción: los timestamps **no** son iguales, así que `DISTINCT *` **no** basta.
-
-Por eso hace falta la lógica temporal (`LAG` + intervalo).
+`DISTINCT *` solo quita filas **idénticas en todas las columnas**.  
+El caso del subject tiene **timestamps distintos** (32 vs 33 s) → hace falta la lógica temporal con `LAG`.
 
 [↑ Volver al índice](#indice)
 
@@ -189,12 +260,11 @@ Por eso hace falta la lógica temporal (`LAG` + intervalo).
 
 ```bash
 docker cp remove_duplicates.sql postgres_piscineds:/tmp/remove_duplicates.sql
-
 docker exec -it postgres_piscineds \
   psql -U "$(whoami)" -d piscineds -W -f /tmp/remove_duplicates.sql
 ```
 
-O desde el menú de [`start.sh`](./start.sh) (opción aplicar SQL).
+O `python3 remove_duplicates.py` / [`start.sh`](./start.sh).
 
 [↑ Volver al índice](#indice)
 
@@ -207,13 +277,21 @@ O desde el menú de [`start.sh`](./start.sh) (opción aplicar SQL).
 SELECT COUNT(*) FROM customers;
 ```
 
-Opcional (antes/después si comentas las líneas en el `.sql`):
+Debe ser **menor** (o igual si no había ecos) que el COUNT tras EX01.  
+En un dataset típico del campus: de ~20,6 M a ~19,2 M.
 
-```sql
--- SELECT COUNT(*) AS customers_before FROM customers;
--- (ejecutar DELETE)
--- SELECT COUNT(*) AS customers_after FROM customers;
-```
+[↑ Volver al índice](#indice)
+
+---
+
+<a id="errores"></a>
+## 🛠️ Errores frecuentes
+
+| Síntoma | Qué hacer |
+|---------|-----------|
+| No existe `customers` | Ejecutar EX01 antes |
+| Tarda mucho | Normal con ~20 M filas |
+| Segunda ejecución borra 0 | Ya estaba limpio; es seguro |
 
 [↑ Volver al índice](#indice)
 
@@ -222,17 +300,17 @@ Opcional (antes/después si comentas las líneas en el `.sql`):
 <a id="glosario"></a>
 ## 📖 Glosario
 
-| Término | Significado breve |
-|---------|-------------------|
+| Término | Significado |
+|---------|-------------|
 | `DELETE` | Borrar filas |
-| `LAG` | Valor de la fila anterior en la ventana |
-| `PARTITION BY` | Agrupar para la ventana |
-| `INTERVAL '1 second'` | Duración de un segundo |
-| `ctid` | Id físico interno de fila en PostgreSQL |
-| Duplicado / eco | Misma instrucción repetida (0 s o ≤ 1 s) |
+| Ventana / `OVER` | Cálculo sobre un conjunto de filas |
+| `PARTITION BY` | Grupos de la ventana |
+| `LAG` | Valor de la fila anterior |
+| `INTERVAL` | Duración de tiempo |
+| `ctid` | Id físico interno de fila |
 
 [↑ Volver al índice](#indice)
 
 ---
 
-*Module 1 – EX02 – Guía SQL – sternero – 42 Málaga – Octubre 2026*
+*Module 1 – EX02 – Guía SQL – sternero – 42 Málaga – 2026*

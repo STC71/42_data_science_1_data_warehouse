@@ -15,12 +15,13 @@
 2. [Archivos a entregar](#archivos)
 3. [Explicación](#explicacion)
 4. [Prerrequisitos](#prereq)
-5. [Implementación](#implementacion)
-6. [Ejecutar](#ejecutar)
-7. [El CSV de febrero](#febrero)
+5. [El CSV de febrero](#febrero)
+6. [Implementación](#implementacion)
+7. [Ejecutar](#ejecutar)
 8. [Comprobar](#comprobar)
-9. [Checklist](#checklist)
-10. [Navegación](#navegacion)
+9. [Guías didácticas](#guias)
+10. [Checklist](#checklist)
+11. [Navegación](#navegacion)
 
 ---
 
@@ -47,10 +48,18 @@ Literalmente:
 
 | Archivo | Rol |
 |---------|-----|
-| [`customers_table.sql`](./customers_table.sql) | `UNION ALL` explícito de los cinco meses |
+| [`customers_table.sql`](./customers_table.sql) | `UNION ALL` explícito de los meses |
 | [`customers_table.py`](./customers_table.py) | Descubre `data_202%` y crea `customers` |
 
 Cualquiera de los dos cumple el nombre `customers_table.*`.
+
+Ayuda (no sustituyen la entrega del subject):
+
+| Archivo | Rol |
+|---------|-----|
+| [`sql.md`](./sql.md) | Guía didáctica del SQL (desde cero + script) |
+| [`python.md`](./python.md) | Guía didáctica del Python (desde cero + script) |
+| [`start.sh`](./start.sh) | Menú opcional de entorno / ejecución / comprobación |
 
 [↑ Volver al índice](#indice)
 
@@ -317,6 +326,24 @@ abrir **View/Edit Data**.
 
 ---
 
+
+<a id="guias"></a>
+## 📘 Guías didácticas
+
+Para quien no domina SQL o Python, estas guías empiezan por lo básico y luego
+explican el código de este ejercicio:
+
+| Guía | Contenido |
+|------|-----------|
+| **[sql.md](./sql.md)** | Tablas, `SELECT`, `UNION ALL`, `CREATE TABLE AS`, el script SQL línea a línea |
+| **[python.md](./python.md)** | Script, funciones, conexión a PostgreSQL, descubrimiento de `data_202%` |
+
+No forman parte de la entrega mínima del subject; son material de estudio del repo.
+
+[↑ Volver al índice](#indice)
+
+---
+
 <a id="checklist"></a>
 ## ✅ Checklist subject
 
@@ -337,6 +364,8 @@ abrir **View/Edit Data**.
 
 - [← EX00](../ex00/README.md)
 - [← README Module 1](../README.md)
+- [📘 Guía SQL](./sql.md)
+- [🐍 Guía Python](./python.md)
 - [Siguiente: EX02 – remove duplicates →](../ex02/README.md)
 
 ---

@@ -1,18 +1,34 @@
 -- =============================================================================
--- EX01 – tabla customers (Módulo 1 – Data Warehouse)
--- Objetivo: unir todas las tablas data_202*_*** en una tabla llamada "customers"
+-- EX01 – customers_table.sql
+-- Module 1 – Data Warehouse – Piscine Data Science
 --
--- "Unir" significa apilar las tablas mensuales de eventos (mismas columnas),
--- no realizar un JOIN relacional mediante una clave. Usa UNION ALL para no perder filas.
--- La eliminación de duplicados corresponde a EX02; NO filtres duplicados aquí.
+-- Qué pide el subject:
+--   Unir todas las tablas data_202*_*** en una tabla llamada exactamente
+--   "customers". Entrega: customers_table.*
+--
+-- Qué significa "unir" aquí:
+--   Apilar (verticalmente) las tablas mensuales de eventos, que tienen las
+--   MISMAS columnas. NO es un JOIN relacional por user_id entre meses.
+--
+--   Analogía: varios cuadernos de caja idénticos (uno por mes) → un solo
+--   archivador llamado "customers".
+--
+-- Por qué UNION ALL y no UNION:
+--   UNION ALL conserva TODAS las filas (incluso repetidas).
+--   UNION (sin ALL) eliminaría duplicados exactos; eso es trabajo de EX02.
+--
+-- Lista fija de meses:
+--   Incluye data_2023_feb si existe en tu BD (CSV del subject / carga Module 0).
+--   Si falta algún mes, este script fallará: usa customers_table.py, que
+--   descubre solo las tablas public.data_202% que existan.
 -- =============================================================================
 
+-- Si customers ya existía (reintento), la borramos para recrearla limpia.
+-- IF EXISTS evita el error "table does not exist" la primera vez.
 DROP TABLE IF EXISTS customers;
 
--- UNION ALL explícito de las tablas mensuales del Módulo 0, incluida data_2023_feb.
--- Si tu BD tiene archivos de otros meses, adapta la lista o usa customers_table.py,
--- que detecta todas las tablas públicas cuyo nombre coincide con data_202%.
-
+-- CREATE TABLE … AS SELECT materializa el resultado de la consulta
+-- en una tabla nueva. Las columnas y tipos se heredan de los data_202*.
 CREATE TABLE customers AS
 SELECT * FROM data_2022_oct
 UNION ALL
@@ -24,6 +40,9 @@ SELECT * FROM data_2023_jan
 UNION ALL
 SELECT * FROM data_2023_feb;
 
--- Comprobación opcional (ejecutar manualmente después de este script):
--- SELECT COUNT(*) FROM customers;
--- Debe ser igual a la suma de COUNT(*) de oct, nov, dec, jan y feb.
+-- Comprobación opcional (ejecutar a mano después):
+--   SELECT COUNT(*) FROM customers;
+-- Debe ser ≈ la SUMA de COUNT(*) de cada tabla de origen.
+-- =============================================================================
+-- Fin de customers_table.sql
+-- =============================================================================
