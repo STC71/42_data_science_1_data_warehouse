@@ -1,7 +1,7 @@
 # 📘 Guía SQL – EX03 Fusion
 
 <p align="center">
-  <img src="./imgs/sql_02.jpg" alt="Module 1 – EX03 – Fusion – Guía SQL" width="100%">
+  <img src="./imgs/sql_03.jpg" alt="Module 1 – EX03 – Fusion – Guía SQL" width="100%">
 </p>
 
 [← README EX03](./README.md) · [← Module 1](../README.md) · [python.md →](./python.md)

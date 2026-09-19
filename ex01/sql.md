@@ -1,7 +1,7 @@
 # 📘 Guía SQL – EX01 Customers table
 
 <p align="center">
-  <img src="./imgs/sql_00.jpg" alt="Module 1 – EX01 – Customers – Guía SQL" width="100%">
+  <img src="./imgs/sql_01.jpg" alt="Module 1 – EX01 – Customers – Guía SQL" width="100%">
 </p>
 
 [← README EX01](./README.md) · [← Module 1](../README.md) · [python.md →](./python.md)

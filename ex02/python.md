@@ -1,7 +1,7 @@
 # 🐍 Guía Python – EX02 Remove duplicates
 
 <p align="center">
-  <img src="./imgs/python_01.jpg" alt="Module 1 – EX02 – Remove duplicates – Guía Python" width="100%">
+  <img src="./imgs/python_02.jpg" alt="Module 1 – EX02 – Remove duplicates – Guía Python" width="100%">
 </p>
 
 [← README EX02](./README.md) · [← sql.md](./sql.md) · [← Module 1](../README.md)

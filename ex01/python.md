@@ -1,7 +1,7 @@
 # 🐍 Guía Python – EX01 Customers table
 
 <p align="center">
-  <img src="./imgs/python_00.jpg" alt="Module 1 – EX01 – Customers – Guía Python" width="100%">
+  <img src="./imgs/python_01.jpg" alt="Module 1 – EX01 – Customers – Guía Python" width="100%">
 </p>
 
 [← README EX01](./README.md) · [← sql.md](./sql.md) · [← Module 1](../README.md)
