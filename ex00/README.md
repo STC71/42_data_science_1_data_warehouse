@@ -34,7 +34,7 @@ Según el subject de **Data Warehouse**:
 | Directorio | `ex00/` |
 | Objetivo | Ver la base de datos **de forma fácil** con un software gráfico |
 | Uso | Debe ser cómodo para **buscar por ID** |
-| Herramientas | pgAdmin, Postico, DBeaver **u otra** similar |
+| Herramienta utilizada en este proyecto | **pgAdmin** |
 
 No se exige un fichero de código concreto. En la evaluación debes **demostrar** la herramienta abierta y conectada a `piscineds`.
 
@@ -72,14 +72,11 @@ Antes de unir tablas (`customers`), limpiar duplicados y fusionar con `items`, n
 ---
 
 <a id="herramientas"></a>
-## 🛠️ Herramientas permitidas
+## 🛠️ Herramienta utilizada
 
-| Herramienta | Notas |
-|-------------|--------|
-| **pgAdmin** | Recomendada (la misma que en Module 0) |
-| **DBeaver** | Muy buena en todas las plataformas |
-| **Postico** | Solo macOS |
-| Otra similar | Válida si permite ver la BD y buscar por ID |
+| Herramienta | Configuración |
+|-------------|---------------|
+| **pgAdmin** | Herramienta elegida y configurada para este proyecto; URL local `http://localhost:5050` |
 
 [↑ Volver al índice](#indice)
 

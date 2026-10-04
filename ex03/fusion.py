@@ -463,9 +463,9 @@ def main() -> None:
     # línea de comandos. No recibe parámetros y no devuelve ningún valor (por eso -> None).
     print()
     print("╔═════════════════════════════════════════════════════════════════════════╗")
-    print("║                              EX03 🖇️ fusion                             ║")
+    print("║                              EX03 🖇️  fusion                             ║")
     print("║             📌 Módulo 1 – Data Science 1 – Data Warehouse               ║")
-    print("║                 sternero 🎓 42 Málaga 🗓️ Octubre 2027                   ║")
+    print("║                 sternero 🎓 42 Málaga 🗓️  Octubre 2027                   ║")
     print("╚═════════════════════════════════════════════════════════════════════════╝")
     print()
     print("🔗 Objetivo: customers LEFT JOIN items (por product_id), sin perder eventos")

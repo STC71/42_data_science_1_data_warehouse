@@ -167,7 +167,7 @@ El orden **no es intercambiable**.
 
 | Carpeta | Ficheros del subject | Idea técnica |
 |---------|----------------------|--------------|
-| [`ex00/`](ex00/README.md) | Demo GUI en defensa | pgAdmin / Postico / DBeaver / … |
+| [`ex00/`](ex00/README.md) | Demo GUI en defensa | **pgAdmin** |
 | [`ex01/`](ex01/README.md) | **`customers_table.*`** | `UNION ALL` → `customers` |
 | [`ex02/`](ex02/README.md) | **`remove_duplicates.*`** | `DELETE` + `LAG` ≤ 1 s |
 | [`ex03/`](ex03/README.md) | **`fusion.*`** | `LEFT JOIN` items → `customers` |
@@ -331,8 +331,11 @@ Antes de ejecutarla:
 3. Descarga el adjunto `data_2023_feb.csv` desde Attachments de la evaluación.
 4. Déjalo en la raíz de este módulo, junto a `ex00/`…`ex03/`, y cárgalo como
    tabla `data_2023_feb` antes de EX01.
-5. Mantén también las tablas fuente del Module 0 (`data_2022_*`,
-   `data_2023_jan`) y `items`; son el estado previo que exige EX00.
+5. Carga también `data_2023_feb.csv` como tabla **`data_2023_feb`**.
+6. Mantén las cinco tablas fuente requeridas del almacén:
+   `data_2022_oct`, `data_2022_nov`, `data_2022_dec`, `data_2023_jan` y
+   `data_2023_feb`, además de `items`; son el estado previo que exige la
+   evaluación de EX00/EX01.
 
 Ejecución:
 
@@ -342,7 +345,7 @@ chmod +x evaluation.sh
 ```
 
 La guía comprueba de forma dinámica la carpeta donde está ubicado el script,
-Docker/PostgreSQL, pgAdmin o una GUI alternativa, el estado inicial de tablas,
+Docker/PostgreSQL, pgAdmin, el estado inicial de tablas,
 los entregables exactos y los criterios cuantitativos de la escala:
 
 - EX01: `customers` debe tener exactamente `20,692,840` filas.
@@ -351,20 +354,135 @@ los entregables exactos y los criterios cuantitativos de la escala:
 - EX03: comprueba `product_id = 5846774`, sus valores de catálogo y que no se
   pierdan filas.
 
-Si detecta `customers` o `customers_fused` de una ejecución anterior, ofrece
-eliminarlas mostrando primero el `DROP TABLE`; nunca elimina tablas fuente ni
-`items` automáticamente. Si se rechaza la limpieza, la guía marca la parada
-oficial de EX00 y no continúa simulando EX01–EX03 sobre un estado contaminado.
+Si el preflight detecta un problema, no se limita a mostrar un error:
+
+- Si Docker no está instalado o no está disponible, explica que debe iniciarse
+  el motor y volver a ejecutar la guía.
+- Si `postgres_piscineds` no está arrancado, pregunta antes de ejecutar
+  `docker compose up -d` desde `data_science_0_creation_db/ex00/`, muestra el
+  comando y vuelve a comprobar el contenedor.
+- Si el contenedor está activo pero PostgreSQL no acepta la conexión, muestra
+  `docker logs postgres_piscineds`, recuerda revisar `ex00/.env` y ofrece un
+  reintento tras esperar a que el servidor termine de iniciar.
+- Si pgAdmin no responde en `http://localhost:5050`, ofrece abrir el asistente
+  `data_science_0_creation_db/ex01/start.sh`, muestra el comando y vuelve a
+  comprobar el código HTTP. Si sigue fallando, indica revisar el proceso, el
+  puerto 5050 y `pgAdmin.md`.
+
+Ninguna recuperación se ejecuta silenciosamente: cada acción requiere
+confirmación y se comprueba de nuevo antes de continuar.
+
+La tabla `data_2023_feb` debe estar ya cargada en PostgreSQL al comenzar: el
+CSV en la carpeta del repositorio y la tabla en el contenedor son dos cosas
+distintas. `evaluation.sh` comprueba ambas y detiene la evaluación si falta
+cualquiera de ellas.
+
+Si el CSV existe en la raíz pero falta la tabla `data_2023_feb`, la guía ofrece
+cargarla desde el propio script. Antes de hacerlo muestra y solicita confirmar:
+
+```bash
+docker exec -i postgres_piscineds \
+  sh -c 'cat > /tmp/data_2023_feb.csv' \
+  < data_2023_feb.csv
+```
+
+y el SQL que ejecutará:
+
+```sql
+DROP TABLE IF EXISTS data_2023_feb;
+CREATE TABLE data_2023_feb (
+  event_time TIMESTAMPTZ,
+  event_type VARCHAR(50),
+  product_id INTEGER,
+  price NUMERIC(10,2),
+  user_id BIGINT,
+  user_session UUID
+);
+COPY data_2023_feb
+FROM '/tmp/data_2023_feb.csv'
+WITH (FORMAT csv, HEADER true);
+```
+
+Después consulta `COUNT(*)` y solo continúa si la tabla queda disponible.
+Los demás meses no se fabrican ni se cargan sin sus CSV de origen: si falta
+alguno, la guía indica recuperar esos datos mediante Module 0/pgAdmin.
+
+Si detecta `customers`, `customers_fused` o cualquier otra tabla fuera de la
+lista blanca `data_202*` e `items`, las muestra y ofrece eliminarlas mostrando
+primero el comando exacto. El borrado se limita al esquema `public` y utiliza
+`format('%I', tablename)` para citar identificadores de forma segura; nunca
+elimina tablas fuente ni `items`. Si se rechaza la limpieza, la guía marca la
+parada oficial de EX00 y no continúa simulando EX01–EX03 sobre un estado
+contaminado.
 
 La respuesta HTTP de pgAdmin (`http://localhost:5050`) no se considera por sí
-sola una demostración válida: después del preflight, `evaluation.sh` pide
-confirmar que el evaluador ha visto una GUI realmente conectada a
-`localhost:5432`, base `piscineds`, y que se ha podido buscar por
-`user_id`/`product_id`. Si no se demuestra, la evaluación se detiene conforme
-al PDF. Tras cada pausa limpia la terminal y muestra el último resultado con
-color e icono. Al final conserva un resumen acumulado y un resultado orientativo
-verde/rojo. La decisión oficial sigue siendo la de la escala Intra y el
-evaluador.
+sola una demostración válida. En este proyecto la demostración se hace
+exclusivamente con pgAdmin:
+
+1. Abre `http://localhost:5050`.
+2. Expande `Servers → PostgreSQL → Databases → piscineds → Schemas → public → Tables`.
+3. Abre `Query Tool` sobre una tabla `data_202*`.
+4. Ejecuta, por ejemplo:
+
+   ```sql
+   SELECT product_id, event_type, event_time
+   FROM data_2022_oct
+   WHERE product_id = 5846774
+   LIMIT 10;
+   ```
+
+5. Muestra las filas en `Data Output` y la conexión configurada con
+   `localhost:5432`, base `piscineds` y el usuario del proyecto.
+
+`evaluation.sh` muestra estas acciones, el comando equivalente de comprobación
+por terminal y solicita confirmación explícita. Si no se demuestra la conexión
+real y la búsqueda por ID, la evaluación se detiene conforme al PDF.
+
+Después de limpiar `customers`/`customers_fused`, `evaluation.sh` no ejecuta
+pregunta explícitamente si debe recrearlos. Si se confirma, ofrece cada paso en
+orden y, antes de ejecutarlo, muestra:
+
+- el fichero Python y el fichero SQL equivalentes;
+- el comando exacto para ejecutar cada alternativa;
+- la localización dinámica de las líneas principales donde se realiza la
+  operación (no depende de números de línea fijos);
+- qué técnica se está utilizando, por qué es adecuada y qué resultado debe
+  producir;
+- una explicación breve, completa y, cuando ayuda, una analogía cotidiana;
+- una elección explícita entre Python, SQL u omitir el paso.
+
+Por ejemplo, EX01 puede ejecutarse así:
+
+```bash
+cd /ruta/al/data_science_1_data_warehouse/ex01
+python3 customers_table.py
+```
+
+o directamente mediante PostgreSQL:
+
+```bash
+docker exec -i postgres_piscineds \
+  psql -U sternero -d piscineds \
+  < /ruta/al/data_science_1_data_warehouse/ex01/customers_table.sql
+```
+
+El mismo flujo se ofrece para `ex02/remove_duplicates.py` /
+`remove_duplicates.sql` y `ex03/fusion.py` / `fusion.sql`. Si se rechaza la
+ejecución guiada, se muestran los comandos de `ex01/start.sh`,
+`ex02/start.sh` y `ex03/start.sh` para ejecutarlos manualmente. Al terminar
+los tres ejercicios, la guía verifica el resultado en la misma ejecución; si
+se omite algún paso, los errores de ese ejercicio son esperables y habrá que
+volver a ejecutar `evaluation.sh` tras completarlo. Tras cada pausa limpia la
+terminal y muestra el último resultado con color e icono. La decisión oficial
+sigue siendo la de la escala Intra y el evaluador.
+
+Las comprobaciones se hacen en el momento correcto: EX01 se comprueba
+inmediatamente después de crear `customers`, antes de que EX02 reduzca sus
+filas; EX02 se comprueba después de la limpieza y EX03 después de la fusión.
+Así el resumen final conserva el resultado real de cada ejercicio y no vuelve
+a evaluar EX01 contra la tabla ya transformada por EX02. La cabecera que
+aparece después de pulsar Enter es un redibujado de la interfaz, no un reinicio
+del script.
 
 [↑ Volver al índice](#indice)
 
