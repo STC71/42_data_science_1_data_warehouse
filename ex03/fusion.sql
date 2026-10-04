@@ -71,9 +71,12 @@ LEFT JOIN (
         brand
     FROM items
     -- FROM indica de qué tabla queremos seleccionar los datos, en este caso de items.
-    ORDER BY product_id
-    -- Ordenamos por product_id para que DISTINCT ON funcione correctamente.
-    -- Si no, DISTINCT ON podría quedarse con una fila aleatoria de cada grupo de product_id.
+    ORDER BY
+        product_id,
+        category_id DESC NULLS LAST,
+        category_code DESC NULLS LAST,
+        brand DESC NULLS LAST
+    -- Priorizamos la fila más completa si el catálogo repite un product_id.
 ) AS i
 -- Alias i para la tabla items, para no escribir el nombre completo cada vez.
   ON c.product_id = i.product_id;

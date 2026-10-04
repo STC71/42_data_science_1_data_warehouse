@@ -35,8 +35,9 @@
 9. [Guías didácticas](#guias)
 10. [Cómo arrancar el entorno](#entorno)
 11. [Comprobar el almacén](#comprobar)
-12. [Checklist subject](#checklist)
-13. [Navegación](#navegacion)
+12. [Guía de evaluación (`evaluation.sh`)](#evaluation)
+13. [Checklist subject](#checklist)
+14. [Navegación](#navegacion)
 
 ---
 
@@ -90,6 +91,7 @@ Al final, `customers` concentra el historial de eventos **más** categoría/marc
 data_science_1_data_warehouse/
 ├── README.md                 ← este archivo
 ├── start.sh                  ← asistente GLOBAL (recomendado)
+├── evaluation.sh             ← guía interactiva de defensa
 ├── imgs/
 ├── ex00/                     ← Show me your DB
 │   ├── README.md
@@ -200,7 +202,7 @@ chmod +x start.sh
 |--------|--------|
 | 1 | Estado (Module 0, Docker, **pgAdmin**, tablas) |
 | 2 | Levantar **PostgreSQL + pgAdmin** |
-| g | Solo **pgAdmin** (`http://127.0.0.1:5050`) |
+| g | Solo **pgAdmin** (`http://localhost:5050`) |
 | p | `chmod +x` scripts conocidos |
 | 3–5 | Pipeline EX01 → EX02 → EX03 |
 | 6–7 | COUNT / `\d` y `psql` |
@@ -313,6 +315,61 @@ SELECT * FROM customers WHERE brand IS NOT NULL LIMIT 5;
 
 ---
 
+<a id="evaluation"></a>
+## 🧪 Guía de evaluación (`evaluation.sh`)
+
+La guía [`evaluation.sh`](./evaluation.sh) está basada en
+[`evaluation_en.pdf`](./evaluation_en.pdf) y [`en.subject.pdf`](./en.subject.pdf).
+Reproduce el orden de la defensa y muestra los comandos utilizados para que el
+evaluador pueda comprobarlos y discutirlos con el evaluado.
+
+Antes de ejecutarla:
+
+1. Clona el repositorio en una carpeta vacía.
+2. Asegúrate de que PostgreSQL del Module 0 está disponible en
+   `localhost:5432`, con la base `piscineds`.
+3. Descarga el adjunto `data_2023_feb.csv` desde Attachments de la evaluación.
+4. Déjalo en la raíz de este módulo, junto a `ex00/`…`ex03/`, y cárgalo como
+   tabla `data_2023_feb` antes de EX01.
+5. Mantén también las tablas fuente del Module 0 (`data_2022_*`,
+   `data_2023_jan`) y `items`; son el estado previo que exige EX00.
+
+Ejecución:
+
+```bash
+chmod +x evaluation.sh
+./evaluation.sh
+```
+
+La guía comprueba de forma dinámica la carpeta donde está ubicado el script,
+Docker/PostgreSQL, pgAdmin o una GUI alternativa, el estado inicial de tablas,
+los entregables exactos y los criterios cuantitativos de la escala:
+
+- EX01: `customers` debe tener exactamente `20,692,840` filas.
+- EX02: comprueba los dos ejemplos de duplicados/ecos del PDF, el caso que no
+  debe borrarse y el rango `18,500,000`–`19,200,000`.
+- EX03: comprueba `product_id = 5846774`, sus valores de catálogo y que no se
+  pierdan filas.
+
+Si detecta `customers` o `customers_fused` de una ejecución anterior, ofrece
+eliminarlas mostrando primero el `DROP TABLE`; nunca elimina tablas fuente ni
+`items` automáticamente. Si se rechaza la limpieza, la guía marca la parada
+oficial de EX00 y no continúa simulando EX01–EX03 sobre un estado contaminado.
+
+La respuesta HTTP de pgAdmin (`http://localhost:5050`) no se considera por sí
+sola una demostración válida: después del preflight, `evaluation.sh` pide
+confirmar que el evaluador ha visto una GUI realmente conectada a
+`localhost:5432`, base `piscineds`, y que se ha podido buscar por
+`user_id`/`product_id`. Si no se demuestra, la evaluación se detiene conforme
+al PDF. Tras cada pausa limpia la terminal y muestra el último resultado con
+color e icono. Al final conserva un resumen acumulado y un resultado orientativo
+verde/rojo. La decisión oficial sigue siendo la de la escala Intra y el
+evaluador.
+
+[↑ Volver al índice](#indice)
+
+---
+
 <a id="checklist"></a>
 ## ✅ Checklist subject
 
@@ -326,6 +383,7 @@ SELECT * FROM customers WHERE brand IS NOT NULL LIMIT 5;
 | **EX03** – Fusión con `items` **sin perder información** | ☐ |
 | **EX03** – Entrega `ex03/fusion.*` | ☐ |
 | Nombres de carpetas y ficheros según el PDF | ☐ |
+| `data_2023_feb.csv` descargado desde Attachments y cargado como `data_2023_feb` | ☐ |
 | Trabajo en el repositorio Git asignado | ☐ |
 | Puedes demostrar el flujo en la máquina del evaluado | ☐ |
 
@@ -348,5 +406,5 @@ SELECT * FROM customers WHERE brand IS NOT NULL LIMIT 5;
 
 <p align="center">
   <em>Piscine Data Science – Module 1 – Data Warehouse</em><br>
-  <strong>sternero – 42 Málaga – 2026</strong>
+  <strong>sternero – 42 Málaga – Octubre 2026</strong>
 </p>

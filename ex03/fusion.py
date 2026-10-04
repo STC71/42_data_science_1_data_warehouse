@@ -303,7 +303,11 @@ LEFT JOIN (
         category_code,
         brand
     FROM items
-    ORDER BY product_id
+    ORDER BY
+        product_id,
+        category_id DESC NULLS LAST,
+        category_code DESC NULLS LAST,
+        brand DESC NULLS LAST
 ) AS i
   ON c.product_id = i.product_id;
 
