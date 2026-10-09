@@ -199,7 +199,7 @@ check_docker_and_pgadmin() {
     STOP_EVAL=true
     return 0
   fi
-  show_cmd "docker ps -a --filter name=^/${CONTAINER_NAME}$ --format 'table {{.Names}}\\t{{.Status}}\\t{{.Ports}}'"
+  show_cmd "docker ps -a --filter \"name=^/${CONTAINER_NAME}$\""
   if docker ps --format '{{.Names}}' | grep -qx "$CONTAINER_NAME"; then
     ok "$CONTAINER_NAME está ejecutándose"
   else
